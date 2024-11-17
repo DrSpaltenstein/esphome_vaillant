@@ -43,10 +43,10 @@ switch:
   - platform: restart
     name: "Vaillant Restart"
 
-text_sensor:
-  - platform: debug
-    reset_reason:
-      name: "Reset Reason"
+#text_sensor:
+  #- platform: debug
+   # reset_reason:
+    #  name: "Reset Reason"
 
 sensor:
   - platform: uptime
@@ -64,13 +64,13 @@ sensor:
     update_interval: 60s
     entity_category: "diagnostic"
     device_class: ""
-  - platform: debug
-    free:
-      name: "Heap Free"
-    block:
-      name: "Heap Max Block"
-    loop_time:
-      name: "Loop Time"
+  #- platform: debug
+   # free:
+    #  name: "Heap Free"
+    #block:
+     # name: "Heap Max Block"
+    #loop_time:
+     # name: "Loop Time"
   # Vaillant stuff
   - name: "Vorlauf ist"
     id: vaill0
