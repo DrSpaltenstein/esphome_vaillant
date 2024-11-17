@@ -121,16 +121,16 @@ sensor:
     update_interval: 10s
     accuracy_decimals: 0
     lambda: "return {};"
-  - name: "Used as input sensor for the PID component"
-    id: pid_vorlauf_input
-    internal: true
-    platform: copy
-    source_id: vaill3
-    unit_of_measurement: "°C"
-    filters:
-      - median:
-          window_size: 3
-          send_every: 1
+  # - name: "Used as input sensor for the PID component"
+  #   id: pid_vorlauf_input
+  #   internal: true
+  #   platform: copy
+  #   source_id: vaill3
+  #   unit_of_measurement: "°C"
+  #   filters:
+  #     - median:
+  #         window_size: 3
+  #         send_every: 1
 
 binary_sensor:
   - name: "Brenner"
@@ -156,30 +156,30 @@ custom_component:
     App.register_component(vx6);
     return {vx6};
 
-climate:
-  - platform: pid
-    id: vaillant_pid
-    name: "PID Vorlauf"
-    sensor: pid_vorlauf_input
-    heat_output: vaillant_789
-    default_target_temperature: "50°C"
-    visual:
-      min_temperature: 20
-      max_temperature: 80
-      temperature_step: 1
-    control_parameters:
-      output_averaging_samples: 3
-      # No Overshoot PID
-      kp: 0.00460
-      ki: 0.00046
-      kd: 0.02878
-    deadband_parameters:
-      threshold_high: 0.9°C
-      threshold_low: -0.9°C
-      kp_multiplier: 0.0   # proportional gain turned off inside deadband
-      ki_multiplier: 0.05  # integral accumulates at only 5% of normal ki
-      kd_multiplier: 0.0   # derviative is turned off inside deadband
-      deadband_output_averaging_samples: 15   # average the output over 15 samples within the deadband
+# climate:
+#   - platform: pid
+#     id: vaillant_pid
+#     name: "PID Vorlauf"
+#     sensor: pid_vorlauf_input
+#     heat_output: vaillant_789
+#     default_target_temperature: "50°C"
+#     visual:
+#       min_temperature: 20
+#       max_temperature: 80
+#       temperature_step: 1
+#     control_parameters:
+#       output_averaging_samples: 3
+#       # No Overshoot PID
+#       kp: 0.00460
+#       ki: 0.00046
+#       kd: 0.02878
+#     deadband_parameters:
+#       threshold_high: 0.9°C
+#       threshold_low: -0.9°C
+#       kp_multiplier: 0.0   # proportional gain turned off inside deadband
+#       ki_multiplier: 0.05  # integral accumulates at only 5% of normal ki
+#       kd_multiplier: 0.0   # derviative is turned off inside deadband
+#       deadband_output_averaging_samples: 15   # average the output over 15 samples within the deadband
 
 uart:
   id: x6_uart
@@ -187,11 +187,11 @@ uart:
   rx_pin: GPIO16
   baud_rate: 9600
 
-output:
-  - platform: ledc
-    pin: GPIO27
-    id: vaillant_789
-    frequency: 30kHz
-    zero_means_zero: true
-    min_power: 0.1
-    max_power: 0.8
+# output:
+#   - platform: ledc
+#     pin: GPIO27
+#     id: vaillant_789
+#     frequency: 30kHz
+#     zero_means_zero: true
+#     min_power: 0.1
+#     max_power: 0.8
