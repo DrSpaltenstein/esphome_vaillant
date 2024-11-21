@@ -115,84 +115,9 @@ sensor:
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "Speichertemperatur ist"
-    id: vaill7
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-  - name: "Unbekannt 2byte 0B"
-    id: vaill8
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-  - name: "Unbekannt 2byte 29"
-    id: vaill9
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-  - name: "Aussentemp"
-    id: vaill10
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
 
-
-  - name: "UnbekTemp 2byte A4"
-    id: vaill11
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-  - name: "UnbekTemp 2byte A5"
-    id: vaill12
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-  - name: "UnbekTemp 2byte A6"
-    id: vaill13
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-  - name: "UnbekTemp 2byte A7"
-    id: vaill14
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-  - name: "UnbekTemp 2byte A8"
-    id: vaill15
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-  - name: "UnbekTemp 1byte A9"
-    id: vaill16
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-  - name: "UnbekTemp 2byte AB"
-    id: vaill17
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"                
-
-  - name: "Verbliebene Brennersperrzeit"
-    id: mvaill0
-    platform: template
-    unit_of_measurement: "min"
-    update_interval: 120s
-    accuracy_decimals: 0
-    lambda: "return {};"
   - name: "Unbekant min 1byte AB "
-    id: mvaill1
+    id: mvaill0
     platform: template
     update_interval: 120s
     lambda: "return {};"    
@@ -207,15 +132,9 @@ sensor:
   #         window_size: 3
   #         send_every: 1
 
-  - name: "Wartung in"
-    id: hvaill0
-    platform: template
-    unit_of_measurement: "h"
-    update_interval: 600s
-    accuracy_decimals: 0
-    lambda: "return {};"
+
   - name: "Unbekant h 1byte AB"
-    id: hvaill1
+    id: hvaill0
     platform: template
     unit_of_measurement: "h"
     update_interval: 120s
@@ -239,31 +158,15 @@ binary_sensor:
     id: bvaill3
     platform: template
     lambda: "return {};"
-  - name: "Status Ext Pumpe Speicherladepumpe NOT 3F"
-    id: bvaill4
-    platform: template
-    lambda: "return {};"
-  - name: "Status Unbekannt 3C"
-    id: bvaill5
-    platform: template
-    lambda: "return {};"
-  - name: "Status Unbekannt 07"
-    id: bvaill6
-    platform: template
-    lambda: "return {};"
 
 custom_component:
 - lambda: |-
     auto vx6 = new Vaillantx6(id(x6_uart),
                               id(vaill0),id(vaill1),id(vaill2),id(vaill3),
-                              id(vaill4),id(vaill5),id(vaill6),id(vaill7),
-                              id(vaill8),id(vaill9),id(vaill10),
-                              id(vaill11),id(vaill12),id(vaill13),
-                              id(vaill14),id(vaill15),id(vaill16),id(vaill17),
-                              id(mvaill0),id(mvaill1),
-                              id(hvaill0),id(hvaill1),
-                              id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3),
-                              id(bvaill4),id(bvaill5),id(bvaill6));
+                              id(vaill4),id(vaill5),id(vaill6),
+                              id(mvaill0),
+                              id(hvaill0),
+                              id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3),                              
     App.register_component(vx6);
     return {vx6};  // Registrierung der benutzerdefinierten Komponente Vaillantx6
 

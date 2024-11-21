@@ -86,43 +86,28 @@ const VaillantCommand vaillantCommands[] = {
     {"Vorlauf Ist HK1", 0x18, {Temperature, SensorState, None}, {0, -1, -1}},//vermutlich Temperatur im Kesselkreislauf
     {"Vorlauf Set HK1", 0x19, {Temperature, None, None}, {1, -1, -1}},// Heizkreis 1 sollwert Dehregler, limitiert auch HK2
     {"Vorlauf Soll HK2", 0x39, {Temperature, None, None}, {2, -1, -1}},//Sollwert HK2 als min (VRC/789 und Limit von Drehregler)
-    {"Vorlauf 789 Soll HK2", 0x25, {Temperature, None, None}, {3, -1, -1}},//Soll VL temp vom VRC Kreis 2
-    {"Unbekannt 2 byte 32", 0x32, {Temperature, None, None}, {4, -1, -1}},//
-    {"UnbekTemp 2 byte 2E", 0x2E, {Temperature, None, None}, {5, -1, -1}},//
-    {"Speichertemperatur soll", 0x01, {Temperature, None, None}, {6, -1, -1}},// Drehregler
-    {"Speichertemperatur ist", 0x17, {Temperature, None, None}, {7, -1, -1}},//geht
-    {"UnbekTemp 2byte 0B", 0x0B, {Temperature, None, None}, {8, -1, -1}},//
-    {"UnbekTemp 2byte 29", 0x29, {Temperature, None, None}, {9, -1, -1}},//
-    {"Aussentemp", 0x6A, {Temperature, Temperature, None}, {10, -1, -1}},//3,8C
-        {"UnbekTemp 2byte A4", 0xA4, {Temperature, None, None}, {11, -1, -1}},//
-        {"UnbekTemp 2byte A5", 0xA5, {Temperature, None, None}, {12, -1, -1}},//
-        {"UnbekTemp 2byte A6", 0xA6, {Temperature, None, None}, {13, -1, -1}},//
-        {"UnbekTemp 2byte A7", 0xA7, {Temperature, None, None}, {14, -1, -1}},//
-        {"UnbekTemp 2byte A8", 0xA8, {Temperature, None, None}, {15, -1, -1}},//
-        {"UnbekTemp 2byte A9", 0xA9, {Temperature, None, None}, {16, -1, -1}},//
-        {"UnbekTemp 2byte AB", 0xAB, {Temperature, None, None}, {17, -1, -1}},//
+    {"Unbekannt 2 byte 32", 0x32, {Temperature, None, None}, {3, -1, -1}},//
+    {"UnbekTemp 2 byte 2E", 0x2E, {Temperature, None, None}, {4, -1, -1}},//
+    {"UnbekTemp 2byte 0B", 0x0B, {Temperature, None, None}, {5, -1, -1}},//
+    {"UnbekTemp 2byte A4", 0xA4, {Temperature, None, None}, {6, -1, -1}},//
 
-    {"Verbliebene Brennersperrzeit", 0x38, {Minutes, None, None}, {0, -1, -1}},//geht manchmal
-    {"Unbekant min 1byte AB", 0xAB, {Minutes, None, None}, {1, -1, -1}},//
-    {"Stunden bis Wartung", 0xAC, {Hours, Hours, None}, {0, -1, -1}},//geht
-    {"Unbekant h 1byte AB", 0xAB, {Hours, Hours, None}, {1, -1, -1}},//
+    {"Unbekant min 1byte AB", 0xAB, {Minutes, None, None}, {0, -1, -1}},//
+    {"Unbekant h 1byte AB", 0xAB, {Hours, Hours, None}, {0, -1, -1}},//
+
     {"Brenner", 0x0D, {Bool, None, None}, {0, -1, -1}},//geht
-    {"Winterbetrieb", 0x08, {Bool, None, None}, {1, -1, -1}}, //geht
-    {"Pumpe intern Speicherladepumpe NOT 44", 0x44, {Bool, None, None}, {2, -1, -1}},//bei brenner an geht pumpe intern aus
-    {"Zirkulation", 0xAF, {Bool, None, None}, {3, -1, -1}},//geht
-    {"Status Ext Pumpe Speicherladepumpe NOT 3F", 0x3F, {Bool, None, None}, {4, -1, -1}},//signal vorhanden = Pumpe intern vermutlich speicherladepumpe
-    {"Status Unbekannt 3C", 0x3C, {Bool, None, None}, {5, -1, -1}},//
-    {"Status unbekannt 07", 0x07, {Bool, None, None}, {6, -1, -1}},//
+    {"Pumpe intern Speicherladepumpe NOT 44", 0x44, {Bool, None, None}, {1, -1, -1}},//bei brenner an geht pumpe intern aus
+    {"Status Unbekannt 3C", 0x3C, {Bool, None, None}, {2, -1, -1}},//
+    {"Status unbekannt 07", 0x07, {Bool, None, None}, {3, -1, -1}},//
 };
 const byte vaillantCommandsSize = sizeof(vaillantCommands) / sizeof *(vaillantCommands);
 
 class Vaillantx6 : public PollingComponent, public UARTDevice
 {
   // Sensors as provided by custom_component lambda call
-  Sensor *temperatureSensors[18];  // Array for temperature sensors
-  Sensor *minutesSensor[2];  // Array for minute sensors
-  Sensor *hourSensor[2];  // Array for hour sensors
-  BinarySensor *binarySensors[7];  // Array for binary sensors
+  Sensor *temperatureSensors[7];  // Array for temperature sensors
+  Sensor *minutesSensor[1];  // Array for minute sensors
+  Sensor *hourSensor[1];  // Array for hour sensors
+  BinarySensor *binarySensors[4];  // Array for binary sensors
   
   // All commands start with the startBytes sequence
   const byte startBytes[4] = {0x07, 0x00, 0x00, 0x00};  // Start sequence for commands
@@ -130,15 +115,10 @@ class Vaillantx6 : public PollingComponent, public UARTDevice
 public:
   Vaillantx6(UARTComponent *parent,
              Sensor *tSensor0, Sensor *tSensor1, Sensor *tSensor2, Sensor *tSensor3,
-             Sensor *tSensor4, Sensor *tSensor5, Sensor *tSensor6, Sensor *tSensor7,
-             Sensor *tSensor8, Sensor *tSensor9, Sensor *tSensor10,
-             Sensor *tSensor11, Sensor *tSensor12, Sensor *tSensor13,
-             Sensor *tSensor14, Sensor *tSensor15, Sensor *tSensor16,
-             Sensor *tSensor17,
-             Sensor *mSensor0,Sensor *mSensor1,
-             Sensor *hSensor0, Sensor *hSensor1,
+             Sensor *tSensor4, Sensor *tSensor5, Sensor *tSensor6,
+             Sensor *mSensor0,
+             Sensor *hSensor0, 
              BinarySensor *bSensor0, BinarySensor *bSensor1, BinarySensor *bSensor2, BinarySensor *bSensor3,
-             BinarySensor *bSensor4, BinarySensor *bSensor5, BinarySensor *bSensor6)
       : PollingComponent(10000), UARTDevice(parent)
   {
     // Temperature Sensors
@@ -149,31 +129,18 @@ public:
     temperatureSensors[4] = tSensor4; // Return temperature is
     temperatureSensors[5] = tSensor5; // Domestic hot water temperature is
     temperatureSensors[6] = tSensor6; // Domestic hot water temperature target
-    temperatureSensors[7] = tSensor7; // Storage temperature
-    temperatureSensors[8] = tSensor8; // External flow/return temperature
-    temperatureSensors[9] = tSensor9; // Unknown temperature
-    temperatureSensors[10] = tSensor10; // Unknown temperature
-    temperatureSensors[11] = tSensor11; // Unknown temperature
-    temperatureSensors[12] = tSensor12; // Unknown temperature
-    temperatureSensors[13] = tSensor13; // Unknown temperature
-    temperatureSensors[14] = tSensor14; // Unknown temperature
-    temperatureSensors[15] = tSensor15; // Unknown temperature
-    temperatureSensors[16] = tSensor16; // Unknown temperature
-    temperatureSensors[17] = tSensor17; // Unknown temperature
+
     // Minute sensors
     minutesSensor[0] = mSensor0; // Remaining burner lockout time
-    minutesSensor[1] = mSensor1; // Remaining burner lockout time
+
     // Hour sensors
     hourSensor[0] = hSensor0; // Time until maintenance
-    hourSensor[1] = hSensor1; // Time until maintenance    
+   
     // Binary sensors
     binarySensors[0] = bSensor0; // Burner
     binarySensors[1] = bSensor1; // Winter mode
     binarySensors[2] = bSensor2; // Internal pump
     binarySensors[3] = bSensor3; // Circulation
-    binarySensors[4] = bSensor4; // External pump status
-    binarySensors[5] = bSensor5; // Unknown status
-    binarySensors[6] = bSensor6; // Storage loading pump status
   }
 
   /**
