@@ -87,19 +87,19 @@ const VaillantCommand vaillantCommands[] = {
     {"Vorlauf Set HK1", 0x19, {Temperature, None, None}, {1, -1, -1}},// Heizkreis 1 sollwert Dehregler, limitiert auch HK2
     {"Vorlauf Soll HK2", 0x39, {Temperature, None, None}, {2, -1, -1}},//Sollwert HK2 als min (VRC/789 und Limit von Drehregler)
     {"Vorlauf 789 Soll HK2", 0x25, {Temperature, None, None}, {3, -1, -1}},//Soll VL temp vom VRC Kreis 2
-    {"Rücklauf Ist", 0x98, {Temperature, Temperature, SensorState}, {4, -1, -1}},//-13,9
-    {"Brauchwasser Ist", 0x16, {Temperature, SensorState, None}, {5, -1, -1}},//immer 130
+    {"Speichertemperatur unten", 0xB6, {Temperature, Temperature, SensorState}, {4, -1, -1}},//
+    {"Brauchwasser Ist", 0xA3, {Temperature, SensorState, None}, {5, -1, -1}},//
     {"Speichertemperatur soll", 0x01, {Temperature, None, None}, {6, -1, -1}},// Drehregler
     {"Speichertemperatur ist", 0x17, {Temperature, None, None}, {7, -1, -1}},//geht
-    {"ExtVorRuecktemperatur", 0x6B, {Temperature, None, None}, {8, -1, -1}},//
-    {"UnbekTemp", 0x9A, {Temperature, None, None}, {9, -1, -1}},//0,9C
+    {"Unbekannt", 0x76, {Temperature, None, None}, {8, -1, -1}},//
+    {"UnbekTemp", 0x2A, {Temperature, None, None}, {9, -1, -1}},//
     {"Aussentemp", 0x6A, {Temperature, None, None}, {10, -1, -1}},//3,8C
-    {"Verbliebene Brennsperrzeit", 0x38, {Minutes, None, None}, {0, -1, -1}},//geht manchmal
+    {"Verbliebene Brennersperrzeit", 0x38, {Minutes, None, None}, {0, -1, -1}},//geht manchmal
     {"Stunden bis Wartung", 0xAC, {Hours, Hours, None}, {0, -1, -1}},//
     {"Brenner", 0x0d, {Bool, None, None}, {0, -1, -1}},//geht
-    {"Winter", 0x08, {Bool, None, None}, {1, -1, -1}}, //geht
-    {"Pumpe intern", 0x44, {Bool, None, None}, {2, -1, -1}},//bei brenner an geht pumpe intern aus
-    {"Zirkulation", 0xAF, {Bool, None, None}, {3, -1, -1}},//signal vorhanden
+    {"Winterbetrieb", 0x08, {Bool, None, None}, {1, -1, -1}}, //geht
+    {"Pumpe intern NOT", 0x44, {Bool, None, None}, {2, -1, -1}},//bei brenner an geht pumpe intern aus
+    {"Zirkulation", 0xAF, {Bool, None, None}, {3, -1, -1}},//geht
     {"Status Ext Pumpe", 0x3F, {Bool, None, None}, {4, -1, -1}},//signal vorhanden = Pumpe intern vermutlich speicherladepumpe
     {"Status Unbekannt", 0x53, {Bool, None, None}, {5, -1, -1}},//geht nicht
     {"Status Speicherladepumpe", 0x9E, {Bool, None, None}, {6, -1, -1}},//geht nicht
@@ -336,3 +336,5 @@ public:
 
     free(cmdPacket);
     free(answerBuff);
+  }
+};

@@ -98,7 +98,7 @@ sensor:
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "Rücklauf ist"
+  - name: "Speichertemperatur unten"
     id: vaill4
     platform: template
     unit_of_measurement: "°C"
@@ -163,7 +163,7 @@ sensor:
     id: hvaill0
     platform: template
     unit_of_measurement: "h"
-    update_interval: 120s
+    update_interval: 600s
     accuracy_decimals: 0
     lambda: "return {};"
 
@@ -208,7 +208,7 @@ custom_component:
                               id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3),
                               id(bvaill4),id(bvaill5),id(bvaill6));
     App.register_component(vx6);
-    return {vx6};  # Registrierung der benutzerdefinierten Komponente Vaillantx6
+    return {vx6};  // Registrierung der benutzerdefinierten Komponente Vaillantx6
 
 # climate:
 #   - platform: pid
@@ -239,3 +239,13 @@ uart:
   id: x6_uart
   tx_pin: GPIO17  # UART TX-Pin
   rx_pin: GPIO16  # UART RX-Pin
+  baud_rate: 9600
+
+# output:
+#   - platform: ledc
+#     pin: GPIO27
+#     id: vaillant_789
+#     frequency: 30kHz
+#     zero_means_zero: true
+#     min_power: 0.1
+#     max_power: 0.8
