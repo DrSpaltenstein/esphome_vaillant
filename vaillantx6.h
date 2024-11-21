@@ -41,12 +41,17 @@ uint8_t VaillantReturnTypeLength(VaillantReturnTypes t)
 
 float VaillantParseTemperature(byte *answerBuff, uint8_t offset)
 {
+  // Combine two bytes from the answer buffer into a 16-bit integer
   int16_t i = (answerBuff[offset] << 8) | answerBuff[offset + 1];
+  // Convert the integer value to a float and divide by 16 to get the temperature
   return i / (16.0f);
 }
+
 float VaillantParseHours(byte *answerBuff, uint8_t offset)
 {
+  // Combine two bytes from the answer buffer into a 16-bit integer
   int16_t i = (answerBuff[offset] << 8) | answerBuff[offset + 1];
+  // Return the integer value as a float
   return i;
 }
 
@@ -56,25 +61,26 @@ int VaillantParseBool(byte *answerBuff, uint8_t offset)
   {
   case 0xF0:
   case 0x00:
-    return 0;
+    return 0;  // Return 0 for values 0xF0 and 0x00
   case 0x0F:
   case 0x01:
-    return 1;
+    return 1;  // Return 1 for values 0x0F and 0x01
   default:
     ESP_LOGE("VaillantParseBool", "Unable to parse a bool from 0x%.2x", answerBuff[offset]);
-    return -1;
+    return -1;  // Log an error and return -1 for unrecognized values
   }
 }
 
 struct VaillantCommand
 {
-  std::string Name;
-  byte Address;
+  std::string Name; // Name des Befehls
+  byte Address; // Adresse des Befehls
   VaillantReturnTypes ReturnTypes[RETURN_TYPE_COUNT];
   // SensorID contains the ID of the sensor to use, corresponding to the ReturnType.
   // Use -1 to not assign a sensor.
-  int SensorID[RETURN_TYPE_COUNT];
+  int SensorID[RETURN_TYPE_COUNT];// Array von Sensor-IDs
 };
+
 
 const VaillantCommand vaillantCommands[] = {
     {"Vorlauf Ist HK1", 0x18, {Temperature, SensorState, None}, {0, -1, -1}},//vermutlich Temperatur im Kesselkreislauf
@@ -100,62 +106,58 @@ const VaillantCommand vaillantCommands[] = {
 };
 const byte vaillantCommandsSize = sizeof(vaillantCommands) / sizeof *(vaillantCommands);
 
-class Vaillantx6 : public PollingComponent,
-                   public UARTDevice
+class Vaillantx6 : public PollingComponent, public UARTDevice
 {
   // Sensors as provided by custom_component lambda call
-  Sensor *temperatureSensors[11];
-  Sensor *minutesSensor[1];
-  Sensor *hourSensor[1];
-  BinarySensor *binarySensors[7];
+  Sensor *temperatureSensors[11];  // Array for temperature sensors
+  Sensor *minutesSensor[1];  // Array for minute sensors
+  Sensor *hourSensor[1];  // Array for hour sensors
+  BinarySensor *binarySensors[7];  // Array for binary sensors
   
-  // All command start with startBytes sequence
-  const byte startBytes[4] = {0x07, 0x00, 0x00, 0x00};
+  // All commands start with the startBytes sequence
+  const byte startBytes[4] = {0x07, 0x00, 0x00, 0x00};  // Start sequence for commands
 
 public:
   Vaillantx6(UARTComponent *parent,
              Sensor *tSensor0, Sensor *tSensor1, Sensor *tSensor2, Sensor *tSensor3,
              Sensor *tSensor4, Sensor *tSensor5, Sensor *tSensor6, Sensor *tSensor7,
-			 Sensor *tSensor8, Sensor *tSensor9,Sensor *tSensor10,
-			 Sensor *mSensor0,
+             Sensor *tSensor8, Sensor *tSensor9, Sensor *tSensor10,
+             Sensor *mSensor0,
              Sensor *hSensor0,
              BinarySensor *bSensor0, BinarySensor *bSensor1, BinarySensor *bSensor2, BinarySensor *bSensor3,
-			 BinarySensor *bSensor4, BinarySensor *bSensor5, BinarySensor *bSensor6
-			 )
+             BinarySensor *bSensor4, BinarySensor *bSensor5, BinarySensor *bSensor6)
       : PollingComponent(10000), UARTDevice(parent)
   {
     // Temperature Sensors
-    temperatureSensors[0] = tSensor0; // Vorlauf ist
-    temperatureSensors[1] = tSensor1; // Vorlauf set
-    temperatureSensors[2] = tSensor2; // Vorlauf soll
-    temperatureSensors[3] = tSensor3; // Vorlauf 789 soll
-    temperatureSensors[4] = tSensor4; // Ruecklauf ist
-    temperatureSensors[5] = tSensor5; // Brauchwasser ist
-    temperatureSensors[6] = tSensor6; // Brauchwasser soll
-    temperatureSensors[7] = tSensor7; // Speichertemperatur
-    temperatureSensors[8] = tSensor8; // ExtVorRuecktemperatur
-    temperatureSensors[9] = tSensor9; // UnbekTemp
-    temperatureSensors[10] = tSensor10; // UnbekTemp
+    temperatureSensors[0] = tSensor0; // Flow temperature is
+    temperatureSensors[1] = tSensor1; // Flow temperature set
+    temperatureSensors[2] = tSensor2; // Flow temperature target
+    temperatureSensors[3] = tSensor3; // Flow temperature 789 target
+    temperatureSensors[4] = tSensor4; // Return temperature is
+    temperatureSensors[5] = tSensor5; // Domestic hot water temperature is
+    temperatureSensors[6] = tSensor6; // Domestic hot water temperature target
+    temperatureSensors[7] = tSensor7; // Storage temperature
+    temperatureSensors[8] = tSensor8; // External flow/return temperature
+    temperatureSensors[9] = tSensor9; // Unknown temperature
+    temperatureSensors[10] = tSensor10; // Unknown temperature
     // Minute sensors
-    minutesSensor[0] = mSensor0; // Verbleibende Brennsperrzeit
+    minutesSensor[0] = mSensor0; // Remaining burner lockout time
     // Hour sensors
-    hourSensor[0] = hSensor0; // Zeit bis wartung
+    hourSensor[0] = hSensor0; // Time until maintenance
     // Binary sensors
-    binarySensors[0] = bSensor0; // Brenner
-    binarySensors[1] = bSensor1; // Winter
-    binarySensors[2] = bSensor2; // Pumpe intern
-    binarySensors[3] = bSensor3; // Zirkulation
-    binarySensors[4] = bSensor4; // Status Ext Pumpe
-    binarySensors[5] = bSensor5; // Status Unbekannt
-    binarySensors[6] = bSensor6; // Status Speicherladepumpe
-
-    
+    binarySensors[0] = bSensor0; // Burner
+    binarySensors[1] = bSensor1; // Winter mode
+    binarySensors[2] = bSensor2; // Internal pump
+    binarySensors[3] = bSensor3; // Circulation
+    binarySensors[4] = bSensor4; // External pump status
+    binarySensors[5] = bSensor5; // Unknown status
+    binarySensors[6] = bSensor6; // Storage loading pump status
   }
 
   /**
    * Compute the checksum used for Vaillant commands (and responses)
    *
-   * @param data Array of bytes to compute the checksump for
+   * @param data Array of bytes to compute the checksum for
    * @param len How many bytes of data to compute the checksum for
    * @return The 1 byte checksum
    **/
@@ -187,7 +189,7 @@ public:
   }
 
   /**
-   * Create a command (or request) packet to be send to the Vaillant device
+   * Create a command (or request) packet to be sent to the Vaillant device
    * @param packet Pointer to an array of CMD_LENGTH bytes where the resulting packet is stored
    * @param address The address of the command/request to be executed on Vaillant
    * @return CMD_LENGTH
@@ -212,13 +214,13 @@ public:
     return i;
   }
 
-  //  Allocate an buffer big enough to fit the answer packet
-  //  byte *answerBuff = (byte *)malloc(sizeof(byte *) * answerLen >= 8);
+  // Allocate a buffer big enough to fit the answer packet
+  // byte *answerBuff = (byte *)malloc(sizeof(byte *) * answerLen >= 8);
   /**
-   * Send a command package (from buildPackage) to Vaillant and fetch the answer
-   * @param answerBuff Pointer to an array of at least ANSWER_LENGTH bytes wher the answer is stored
-   * @param packet The command packet to be send to Vaillant
-   * @return Number of bytes read into answerBuff, -1 in case the answer was > 8 bytes long and -2 in case of checksum missmatch
+   * Send a command packet (from buildPacket) to Vaillant and fetch the answer
+   * @param answerBuff Pointer to an array of at least ANSWER_LENGTH bytes where the answer is stored
+   * @param packet The command packet to be sent to Vaillant
+   * @return Number of bytes read into answerBuff, -1 in case the answer was > 8 bytes long and -2 in case of checksum mismatch
    */
   int sendPacket(byte *answerBuff, byte *packet)
   {
@@ -227,7 +229,7 @@ public:
     // Send the command packet to Vaillant
     write_array(packet, CMD_LENGTH);
 
-    // Wait for the first byte to arrive to parse the lenght of the answer
+    // Wait for the first byte to arrive to parse the length of the answer
     while (available() < 1)
     {
       delay(50);
@@ -288,7 +290,7 @@ public:
       }
       else if (answerLen <= 3)
       {
-        ESP_LOGW("Vaillantx6", "Anwer is too short (%d bytes)", answerLen);
+        ESP_LOGW("Vaillantx6", "Answer is too short (%d bytes)", answerLen);
         continue;
       }
 
@@ -334,5 +336,3 @@ public:
 
     free(cmdPacket);
     free(answerBuff);
-  }
-};

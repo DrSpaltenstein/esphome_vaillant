@@ -1,36 +1,36 @@
 esphome:
-  name: vaillant2p
-  friendly_name: vaillant2p
+  name: vaillant2p  # Name des Geräts
+  friendly_name: vaillant2p  # Freundlicher Name des Geräts
   includes:
-    - vaillantx6mod.h
+    - vaillantx6.h  # Einbindung der Datei vaillantx6.h
+
 esp32:
-  board: esp32dev
+  board: esp32dev  # ESP32-Board-Typ
   framework:
     #type: arduino
-    type: esp-idf
+    type: esp-idf  # Verwendetes Framework (ESP-IDF)
 
 # Enable logging
-logger:
+logger:  # Aktivierung des Loggers
 
 # Enable Home Assistant API
 api:
   encryption:
-    key: "PJTqUV+todDBJ1tu1lBCgE1LmrKAO7cuFOh9YeP3hOo="
+    key: "PJTqUV+todDBJ1tu1lBCgE1LmrKAO7cuFOh9YeP3hOo="  # Verschlüsselungsschlüssel für die API
 
 web_server:
-  port: 80
+  port: 80  # Web-Server-Port
   #auth:
     #username: admin
     #password: test1234
 
 ota:
   - platform: esphome
-    password: "1053005548dba0f2a74ac1ec531692d2"
+    password: "1053005548dba0f2a74ac1ec531692d2"  # Passwort für OTA-Updates
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-
+  ssid: !secret wifi_ssid  # WiFi-SSID aus geheimen Variablen
+  password: !secret wifi_password  # WiFi-Passwort aus geheimen Variablen
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   #ap:
@@ -38,11 +38,10 @@ wifi:
    # password: "S1UbAwCfw9HX"
 
 #captive_portal:
-    
 
 switch:
   - platform: restart
-    name: "Vaillant Restart"
+    name: "Vaillant Restart"  # Restart-Schalter
 
 #text_sensor:
   #- platform: debug
@@ -52,11 +51,11 @@ switch:
 sensor:
   - platform: uptime
     id: vaillant_uptime
-    name: Vaillant Uptime
+    name: Vaillant Uptime  # Uptime-Sensor
     unit_of_measurement: "s"
   - platform: wifi_signal
     id: wifi_signal_percent
-    name: "WiFi Signal"
+    name: "WiFi Signal"  # WiFi-Signalstärke-Sensor
     # wifi_signal is reported as signal strength/RSSI in dB
     # convert to percent via filter
     filters:
@@ -140,9 +139,7 @@ sensor:
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
-    lambda: "return {};"   
-
-
+    lambda: "return {};"
 
   - name: "Verbliebene Brennersperrzeit"
     id: mvaill0
@@ -168,7 +165,7 @@ sensor:
     unit_of_measurement: "h"
     update_interval: 120s
     accuracy_decimals: 0
-    lambda: "return {};"   
+    lambda: "return {};"
 
 binary_sensor:
   - name: "Brenner"
@@ -194,13 +191,11 @@ binary_sensor:
   - name: "Status Unbekannt"
     id: bvaill5
     platform: template
-    lambda: "return {};"    
+    lambda: "return {};"
   - name: "Status Speicherladepumpe"
     id: bvaill6
     platform: template
-    lambda: "return {};"     
-
-
+    lambda: "return {};"
 
 custom_component:
 - lambda: |-
@@ -213,7 +208,7 @@ custom_component:
                               id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3),
                               id(bvaill4),id(bvaill5),id(bvaill6));
     App.register_component(vx6);
-    return {vx6};
+    return {vx6};  # Registrierung der benutzerdefinierten Komponente Vaillantx6
 
 # climate:
 #   - platform: pid
@@ -242,15 +237,5 @@ custom_component:
 
 uart:
   id: x6_uart
-  tx_pin: GPIO17
-  rx_pin: GPIO16
-  baud_rate: 9600
-
-# output:
-#   - platform: ledc
-#     pin: GPIO27
-#     id: vaillant_789
-#     frequency: 30kHz
-#     zero_means_zero: true
-#     min_power: 0.1
-#     max_power: 0.8
+  tx_pin: GPIO17  # UART TX-Pin
+  rx_pin: GPIO16  # UART RX-Pin
