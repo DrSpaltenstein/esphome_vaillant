@@ -1,12 +1,13 @@
 esphome:
-  name: vaillantdev1a
-  friendly_name: vaillantdev1a
+  name: vaillant2p
+  friendly_name: vaillant2p
   includes:
-    - vaillantx6.h
+    - vaillantx6mod.h
 esp32:
   board: esp32dev
   framework:
-    type: arduino
+    #type: arduino
+    type: esp-idf
 
 # Enable logging
 logger:
@@ -14,17 +15,17 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: "by7kRG/1fUGGrqopn/sLbyB4G7NNIi23gFFDZ4H4dww="
+    key: "PJTqUV+todDBJ1tu1lBCgE1LmrKAO7cuFOh9YeP3hOo="
 
 web_server:
   port: 80
-  auth:
-    username: admin
-    password: test1234
+  #auth:
+    #username: admin
+    #password: test1234
 
 ota:
   - platform: esphome
-    password: "d338e6760431a031535dd680e29991ea"
+    password: "1053005548dba0f2a74ac1ec531692d2"
 
 wifi:
   ssid: !secret wifi_ssid
@@ -32,9 +33,9 @@ wifi:
 
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
-  ap:
-    ssid: "Vaillantdev1A Fallback Hotspot"
-    password: "S1UbAwCfw9HX"
+  #ap:
+   # ssid: "Vaillant2P Fallback Hotspot"
+   # password: "S1UbAwCfw9HX"
 
 #captive_portal:
     
@@ -72,53 +73,82 @@ sensor:
     #loop_time:
      # name: "Loop Time"
   # Vaillant stuff
-  - name: "Vorlauf ist"
+  - name: "Vorlauf ist HK1"
     id: vaill0
     platform: template
+    icon: "mdi:water-percent"
     unit_of_measurement: "°C"
-    update_interval: 10s
+    update_interval: 120s
     lambda: "return {};"
-  - name: "Vorlauf set"
+  - name: "Vorlauf set HK1"
     id: vaill1
     platform: template
     unit_of_measurement: "°C"
-    update_interval: 10s
+    device_class: "temperature"
+    update_interval: 120s
     lambda: "return {};"
-  - name: "Vorlauf soll"
+  - name: "Vorlauf soll HK2"
     id: vaill2
     platform: template
     unit_of_measurement: "°C"
-    update_interval: 10s
+    update_interval: 120s
     lambda: "return {};"
-  - name: "Vorlauf 789 soll"
+  - name: "Vorlauf 789 VRC420 soll HK2"
     id: vaill3
     platform: template
     unit_of_measurement: "°C"
-    update_interval: 10s
+    update_interval: 120s
     lambda: "return {};"
   - name: "Rücklauf ist"
     id: vaill4
     platform: template
     unit_of_measurement: "°C"
-    update_interval: 10s
+    update_interval: 120s
     lambda: "return {};"
   - name: "Brauchwasser ist"
     id: vaill5
     platform: template
     unit_of_measurement: "°C"
-    update_interval: 10s
+    update_interval: 120s
     lambda: "return {};"
-  - name: "Brauchwasser soll"
+  - name: "Speichertemperatur soll"
     id: vaill6
     platform: template
     unit_of_measurement: "°C"
-    update_interval: 10s
+    update_interval: 120s
     lambda: "return {};"
-  - name: "Verbleibende Brennsperrzeit"
+  - name: "Speichertemperatur ist"
+    id: vaill7
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "ExtVorRuecktemperatur"
+    id: vaill8
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "UnbekTemp"
+    id: vaill9
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "Aussentemp"
+    id: vaill10
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"   
+
+
+
+  - name: "Verbliebene Brennersperrzeit"
     id: mvaill0
     platform: template
     unit_of_measurement: "min"
-    update_interval: 10s
+    update_interval: 120s
     accuracy_decimals: 0
     lambda: "return {};"
   # - name: "Used as input sensor for the PID component"
@@ -132,6 +162,14 @@ sensor:
   #         window_size: 3
   #         send_every: 1
 
+  - name: "Wartung in"
+    id: hvaill0
+    platform: template
+    unit_of_measurement: "h"
+    update_interval: 120s
+    accuracy_decimals: 0
+    lambda: "return {};"   
+
 binary_sensor:
   - name: "Brenner"
     id: bvaill0
@@ -141,18 +179,39 @@ binary_sensor:
     id: bvaill1
     platform: template
     lambda: "return {};"
-  - name: "Pumpe"
+  - name: "Pumpe intern"
     id: bvaill2
     platform: template
     lambda: "return {};"
+  - name: "Zirkulation"
+    id: bvaill3
+    platform: template
+    lambda: "return {};"
+  - name: "Status Ext Pumpe"
+    id: bvaill4
+    platform: template
+    lambda: "return {};"
+  - name: "Status Unbekannt"
+    id: bvaill5
+    platform: template
+    lambda: "return {};"    
+  - name: "Status Speicherladepumpe"
+    id: bvaill6
+    platform: template
+    lambda: "return {};"     
+
+
 
 custom_component:
 - lambda: |-
     auto vx6 = new Vaillantx6(id(x6_uart),
                               id(vaill0),id(vaill1),id(vaill2),id(vaill3),
-                              id(vaill4),id(vaill5),id(vaill6),
-                              id(bvaill0),id(bvaill1),id(bvaill2),
-                              id(mvaill0));
+                              id(vaill4),id(vaill5),id(vaill6),id(vaill7),
+                              id(vaill8),id(vaill9),id(vaill10),
+                              id(mvaill0),
+                              id(hvaill0),
+                              id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3),
+                              id(bvaill4),id(bvaill5),id(bvaill6));
     App.register_component(vx6);
     return {vx6};
 

@@ -18,7 +18,8 @@ enum VaillantReturnTypes
   Temperature,
   SensorState,
   Bool,
-  Minutes
+  Minutes,
+  Hours
 };
 
 uint8_t VaillantReturnTypeLength(VaillantReturnTypes t)
@@ -31,6 +32,8 @@ uint8_t VaillantReturnTypeLength(VaillantReturnTypes t)
     return 1;
   case Temperature:
     return 2;
+  case Hours:
+    return 2;
   default:
     return 0;
   }
@@ -40,6 +43,11 @@ float VaillantParseTemperature(byte *answerBuff, uint8_t offset)
 {
   int16_t i = (answerBuff[offset] << 8) | answerBuff[offset + 1];
   return i / (16.0f);
+}
+float VaillantParseHours(byte *answerBuff, uint8_t offset)
+{
+  int16_t i = (answerBuff[offset] << 8) | answerBuff[offset + 1];
+  return i;
 }
 
 int VaillantParseBool(byte *answerBuff, uint8_t offset)
@@ -69,17 +77,26 @@ struct VaillantCommand
 };
 
 const VaillantCommand vaillantCommands[] = {
-    {"Vorlauf Ist", 0x18, {Temperature, SensorState, None}, {0, -1, -1}},
-    {"Vorlauf Set", 0x19, {Temperature, None, None}, {1, -1, -1}},
-    {"Vorlauf Soll", 0x39, {Temperature, None, None}, {2, -1, -1}},
-    {"Vorlauf 789 Soll", 0x25, {Temperature, None, None}, {3, -1, -1}},
-    {"Rücklauf Ist", 0x98, {Temperature, Temperature, SensorState}, {4, -1, -1}},
-    {"Brauchwasser Ist", 0x16, {Temperature, SensorState, None}, {5, -1, -1}},
-    {"Brauchwasser Soll", 0x01, {Temperature, None, None}, {6, -1, -1}},
-    {"Brenner", 0x0d, {Bool, None, None}, {0, -1, -1}},
-    {"Winter", 0x08, {Bool, None, None}, {1, -1, -1}},
-    {"Pumpe", 0x44, {Bool, None, None}, {2, -1, -1}},
-    {"Verbliebene Brennsperrzeit", 0x38, {Minutes, None, None}, {0, -1, -1}},
+    {"Vorlauf Ist HK1", 0x18, {Temperature, SensorState, None}, {0, -1, -1}},//vermutlich Temperatur im Kesselkreislauf
+    {"Vorlauf Set HK1", 0x19, {Temperature, None, None}, {1, -1, -1}},// Heizkreis 1 sollwert Dehregler, limitiert auch HK2
+    {"Vorlauf Soll HK2", 0x39, {Temperature, None, None}, {2, -1, -1}},//Sollwert HK2 als min (VRC/789 und Limit von Drehregler)
+    {"Vorlauf 789 Soll HK2", 0x25, {Temperature, None, None}, {3, -1, -1}},//Soll VL temp vom VRC Kreis 2
+    {"Rücklauf Ist", 0x98, {Temperature, Temperature, SensorState}, {4, -1, -1}},//-13,9
+    {"Brauchwasser Ist", 0x16, {Temperature, SensorState, None}, {5, -1, -1}},//immer 130
+    {"Speichertemperatur soll", 0x01, {Temperature, None, None}, {6, -1, -1}},// Drehregler
+    {"Speichertemperatur ist", 0x17, {Temperature, None, None}, {7, -1, -1}},//geht
+    {"ExtVorRuecktemperatur", 0x6B, {Temperature, None, None}, {8, -1, -1}},//
+    {"UnbekTemp", 0x9A, {Temperature, None, None}, {9, -1, -1}},//0,9C
+    {"Aussentemp", 0x6A, {Temperature, None, None}, {10, -1, -1}},//3,8C
+    {"Verbliebene Brennsperrzeit", 0x38, {Minutes, None, None}, {0, -1, -1}},//geht manchmal
+    {"Stunden bis Wartung", 0xAC, {Hours, Hours, None}, {0, -1, -1}},//
+    {"Brenner", 0x0d, {Bool, None, None}, {0, -1, -1}},//geht
+    {"Winter", 0x08, {Bool, None, None}, {1, -1, -1}}, //geht
+    {"Pumpe intern", 0x44, {Bool, None, None}, {2, -1, -1}},//bei brenner an geht pumpe intern aus
+    {"Zirkulation", 0xAF, {Bool, None, None}, {3, -1, -1}},//signal vorhanden
+    {"Status Ext Pumpe", 0x3F, {Bool, None, None}, {4, -1, -1}},//signal vorhanden = Pumpe intern vermutlich speicherladepumpe
+    {"Status Unbekannt", 0x53, {Bool, None, None}, {5, -1, -1}},//geht nicht
+    {"Status Speicherladepumpe", 0x9E, {Bool, None, None}, {6, -1, -1}},//geht nicht
 };
 const byte vaillantCommandsSize = sizeof(vaillantCommands) / sizeof *(vaillantCommands);
 
@@ -87,19 +104,24 @@ class Vaillantx6 : public PollingComponent,
                    public UARTDevice
 {
   // Sensors as provided by custom_component lambda call
-  Sensor *temperatureSensors[8];
-  BinarySensor *binarySensors[3];
+  Sensor *temperatureSensors[11];
   Sensor *minutesSensor[1];
-
+  Sensor *hourSensor[1];
+  BinarySensor *binarySensors[7];
+  
   // All command start with startBytes sequence
   const byte startBytes[4] = {0x07, 0x00, 0x00, 0x00};
 
 public:
   Vaillantx6(UARTComponent *parent,
              Sensor *tSensor0, Sensor *tSensor1, Sensor *tSensor2, Sensor *tSensor3,
-             Sensor *tSensor4, Sensor *tSensor5, Sensor *tSensor6,
-             BinarySensor *bSensor0, BinarySensor *bSensor1, BinarySensor *bSensor2,
-             Sensor *mSensor0)
+             Sensor *tSensor4, Sensor *tSensor5, Sensor *tSensor6, Sensor *tSensor7,
+			 Sensor *tSensor8, Sensor *tSensor9,Sensor *tSensor10,
+			 Sensor *mSensor0,
+             Sensor *hSensor0,
+             BinarySensor *bSensor0, BinarySensor *bSensor1, BinarySensor *bSensor2, BinarySensor *bSensor3,
+			 BinarySensor *bSensor4, BinarySensor *bSensor5, BinarySensor *bSensor6
+			 )
       : PollingComponent(10000), UARTDevice(parent)
   {
     // Temperature Sensors
@@ -110,12 +132,24 @@ public:
     temperatureSensors[4] = tSensor4; // Ruecklauf ist
     temperatureSensors[5] = tSensor5; // Brauchwasser ist
     temperatureSensors[6] = tSensor6; // Brauchwasser soll
+    temperatureSensors[7] = tSensor7; // Speichertemperatur
+    temperatureSensors[8] = tSensor8; // ExtVorRuecktemperatur
+    temperatureSensors[9] = tSensor9; // UnbekTemp
+    temperatureSensors[10] = tSensor10; // UnbekTemp
+    // Minute sensors
+    minutesSensor[0] = mSensor0; // Verbleibende Brennsperrzeit
+    // Hour sensors
+    hourSensor[0] = hSensor0; // Zeit bis wartung
     // Binary sensors
     binarySensors[0] = bSensor0; // Brenner
     binarySensors[1] = bSensor1; // Winter
-    binarySensors[2] = bSensor2; // Pumpe
-    // Minute sensors
-    minutesSensor[0] = mSensor0; // Verbleibende Brennsperrzeit
+    binarySensors[2] = bSensor2; // Pumpe intern
+    binarySensors[3] = bSensor3; // Zirkulation
+    binarySensors[4] = bSensor4; // Status Ext Pumpe
+    binarySensors[5] = bSensor5; // Status Unbekannt
+    binarySensors[6] = bSensor6; // Status Speicherladepumpe
+
+    
   }
 
   /**
@@ -290,6 +324,9 @@ public:
         case Minutes:
           minutesSensor[sensorID]->publish_state(answerBuff[2]);
           goto exit_type_loop;
+          
+        case Hours:
+          hourSensor[sensorID]->publish_state(VaillantParseHours(answerBuff, 2));
         }
       }
     exit_type_loop:;
