@@ -1,11 +1,10 @@
 esphome:
-  name: vaillant2p  # Name des Geräts
-  friendly_name: vaillant2p  # Freundlicher Name des Geräts
+  name: vaillantvkktest
+  friendly_name: vaillantvkktest
   includes:
-    - vaillantx6.h  # Einbindung der Datei vaillantx6.h
-
+    - vaillantx6mod.h  # Einbindung der Datei vaillantx6.h
 esp32:
-  board: esp32dev  # ESP32-Board-Typ
+  board: esp32dev
   framework:
     #type: arduino
     type: esp-idf  # Verwendetes Framework (ESP-IDF)
@@ -16,7 +15,7 @@ logger:  # Aktivierung des Loggers
 # Enable Home Assistant API
 api:
   encryption:
-    key: "PJTqUV+todDBJ1tu1lBCgE1LmrKAO7cuFOh9YeP3hOo="  # Verschlüsselungsschlüssel für die API
+    key: "pzoRsVCmlqF/bRS8wAV3qS1bjkAG+PfBYz9aCo9UG1c="
 
 web_server:
   port: 80  # Web-Server-Port
@@ -26,16 +25,16 @@ web_server:
 
 ota:
   - platform: esphome
-    password: "1053005548dba0f2a74ac1ec531692d2"  # Passwort für OTA-Updates
+    password: "e3f0de663b7710882baf210db3c6174b"
 
 wifi:
   ssid: !secret wifi_ssid  # WiFi-SSID aus geheimen Variablen
   password: !secret wifi_password  # WiFi-Passwort aus geheimen Variablen
 
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
+# Enable fallback hotspot (captive portal) in case wifi connection fails
   #ap:
-   # ssid: "Vaillant2P Fallback Hotspot"
-   # password: "S1UbAwCfw9HX"
+  # ssid: "Vaillant2P Fallback Hotspot"
+# password: "S1UbAwCfw9HX"
 
 #captive_portal:
 
@@ -98,13 +97,13 @@ sensor:
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "Speichertemperatur unten"
+  - name: "Unbekannt 2 byte 32"
     id: vaill4
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "Brauchwasser ist"
+  - name: "UnbekTemp 2 byte 2E"
     id: vaill5
     platform: template
     unit_of_measurement: "°C"
@@ -122,13 +121,13 @@ sensor:
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "ExtVorRuecktemperatur"
+  - name: "Unbekannt 2byte 0B"
     id: vaill8
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "UnbekTemp"
+  - name: "Unbekannt 2byte 29"
     id: vaill9
     platform: template
     unit_of_measurement: "°C"
@@ -141,6 +140,50 @@ sensor:
     update_interval: 120s
     lambda: "return {};"
 
+
+  - name: "UnbekTemp 2byte A4"
+    id: vaill11
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "UnbekTemp 2byte A5"
+    id: vaill12
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "UnbekTemp 2byte A6"
+    id: vaill13
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "UnbekTemp 2byte A7"
+    id: vaill14
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "UnbekTemp 2byte A8"
+    id: vaill15
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "UnbekTemp 1byte A9"
+    id: vaill16
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "UnbekTemp 2byte AB"
+    id: vaill17
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"                
+
   - name: "Verbliebene Brennersperrzeit"
     id: mvaill0
     platform: template
@@ -148,6 +191,11 @@ sensor:
     update_interval: 120s
     accuracy_decimals: 0
     lambda: "return {};"
+  - name: "Unbekant min 1byte AB "
+    id: mvaill1
+    platform: template
+    update_interval: 120s
+    lambda: "return {};"    
   # - name: "Used as input sensor for the PID component"
   #   id: pid_vorlauf_input
   #   internal: true
@@ -166,6 +214,13 @@ sensor:
     update_interval: 600s
     accuracy_decimals: 0
     lambda: "return {};"
+  - name: "Unbekant h 1byte AB"
+    id: hvaill1
+    platform: template
+    unit_of_measurement: "h"
+    update_interval: 120s
+    accuracy_decimals: 0
+    lambda: "return {};"    
 
 binary_sensor:
   - name: "Brenner"
@@ -176,7 +231,7 @@ binary_sensor:
     id: bvaill1
     platform: template
     lambda: "return {};"
-  - name: "Pumpe intern"
+  - name: "Pumpe intern Speicherladepumpe NOT 44"
     id: bvaill2
     platform: template
     lambda: "return {};"
@@ -184,15 +239,15 @@ binary_sensor:
     id: bvaill3
     platform: template
     lambda: "return {};"
-  - name: "Status Ext Pumpe"
+  - name: "Status Ext Pumpe Speicherladepumpe NOT 3F"
     id: bvaill4
     platform: template
     lambda: "return {};"
-  - name: "Status Unbekannt"
+  - name: "Status Unbekannt 3C"
     id: bvaill5
     platform: template
     lambda: "return {};"
-  - name: "Status Speicherladepumpe"
+  - name: "Status Unbekannt 07"
     id: bvaill6
     platform: template
     lambda: "return {};"
@@ -203,8 +258,10 @@ custom_component:
                               id(vaill0),id(vaill1),id(vaill2),id(vaill3),
                               id(vaill4),id(vaill5),id(vaill6),id(vaill7),
                               id(vaill8),id(vaill9),id(vaill10),
-                              id(mvaill0),
-                              id(hvaill0),
+                              id(vaill11),id(vaill12),id(vaill13),
+                              id(vaill14),id(vaill15),id(vaill16),id(vaill17),
+                              id(mvaill0),id(mvaill1),
+                              id(hvaill0),id(hvaill1),
                               id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3),
                               id(bvaill4),id(bvaill5),id(bvaill6));
     App.register_component(vx6);
