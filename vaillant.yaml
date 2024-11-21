@@ -166,7 +166,7 @@ custom_component:
                               id(vaill4),id(vaill5),id(vaill6),
                               id(mvaill0),
                               id(hvaill0),
-                              id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3),                              
+                              id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3))                           
     App.register_component(vx6);
     return {vx6};  // Registrierung der benutzerdefinierten Komponente Vaillantx6
 

@@ -118,7 +118,7 @@ public:
              Sensor *tSensor4, Sensor *tSensor5, Sensor *tSensor6,
              Sensor *mSensor0,
              Sensor *hSensor0, 
-             BinarySensor *bSensor0, BinarySensor *bSensor1, BinarySensor *bSensor2, BinarySensor *bSensor3,
+             BinarySensor *bSensor0, BinarySensor *bSensor1, BinarySensor *bSensor2, BinarySensor *bSensor3)
       : PollingComponent(10000), UARTDevice(parent)
   {
     // Temperature Sensors
