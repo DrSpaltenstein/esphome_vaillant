@@ -253,7 +253,7 @@ sensor:
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "UnbekTemp 2byte A4"
+  - name: "Speichertemperatur ist"
     id: vaill6
     platform: template
     unit_of_measurement: "°C"
@@ -303,7 +303,7 @@ binary_sensor:
     platform: template
     lambda: "return {};"
 
-  - name: "Invertierte Pumpe intern Speicherladepumpe"
+  - name: "Speicherladepumpe"
     platform: template    
     lambda: |-
       return !id(bvaill1).state;  // Invertiere den Zustand des Sensors

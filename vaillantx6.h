@@ -89,7 +89,8 @@ const VaillantCommand vaillantCommands[] = {
     {"Unbekannt 2 byte 32", 0x32, {Temperature, None, None}, {3, -1, -1}},//
     {"UnbekTemp 2 byte 2E", 0x2E, {Temperature, None, None}, {4, -1, -1}},//
     {"UnbekTemp 2byte 0B", 0x0B, {Temperature, None, None}, {5, -1, -1}},//
-    {"UnbekTemp 2byte A4", 0xA4, {Temperature, None, None}, {6, -1, -1}},//
+    //{"UnbekTemp 2byte A4", 0xA4, {Temperature, None, None}, {6, -1, -1}},//
+    {"Speichertemperatur ist", 0x17, {Temperature, None, None}, {6, -1, -1}},//geht
 
     {"Unbekant min 1byte AB", 0xAB, {Minutes, None, None}, {0, -1, -1}},//
     {"Unbekant h 1byte AB", 0xAB, {Hours, Hours, None}, {0, -1, -1}},//
