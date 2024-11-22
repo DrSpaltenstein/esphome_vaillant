@@ -91,32 +91,176 @@ sensor:
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "Vorlauf 789 VRC420 soll HK2"
+  - name: "Unbekannt 2 byte 32"
     id: vaill3
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "Unbekannt 2 byte 32"
+  - name: "UnbekTemp 2 byte 2E"
     id: vaill4
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "UnbekTemp 2 byte 2E"
+  - name: "UnbekTemp 2byte 0B"
     id: vaill5
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "Speichertemperatur soll"
+  - name: "UnbekTemp 2byte A4"
     id: vaill6
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
 
-  - name: "Unbekant min 1byte AB "
+  - name: "Unbekant min 1byte AB"
+    id: mvaill0
+    platform: template
+    update_interval: 120s
+    lambda: "return {};"    
+  # - name: "Used as input sensor for the PID component"
+  #   id: pid_vorlauf_input
+  #   internal: true
+  #   platform: copy
+  #   source_id: vaill3
+  #   unit_of_measurement: "°C"
+  #   filters:
+  #     - median:
+  #         window_size: 3
+  #         send_every: 1
+
+
+  - name: "Unbekant h 1byte AB"
+    id: hvaill0
+    platform: template
+    unit_of_measurement: "h"
+    update_interval: 120s
+    accuracy_decimals: 0
+    lambda: "return {};"    
+
+binary_sensor:
+  - name: "Brenner"esphome:
+  name: vaillantvkktest
+  friendly_name: vaillantvkktest
+  includes:
+    - vaillantx6mod.h  # Einbindung der Datei vaillantx6.h
+esp32:
+  board: esp32dev
+  framework:
+    #type: arduino
+    type: esp-idf  # Verwendetes Framework (ESP-IDF)
+
+# Enable logging
+logger:  # Aktivierung des Loggers
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "pzoRsVCmlqF/bRS8wAV3qS1bjkAG+PfBYz9aCo9UG1c="
+
+web_server:
+  port: 80  # Web-Server-Port
+  #auth:
+    #username: admin
+    #password: test1234
+
+ota:
+  - platform: esphome
+    password: "e3f0de663b7710882baf210db3c6174b"
+
+wifi:
+  ssid: !secret wifi_ssid  # WiFi-SSID aus geheimen Variablen
+  password: !secret wifi_password  # WiFi-Passwort aus geheimen Variablen
+
+# Enable fallback hotspot (captive portal) in case wifi connection fails
+  #ap:
+  # ssid: "Vaillant2P Fallback Hotspot"
+# password: "S1UbAwCfw9HX"
+
+#captive_portal:
+
+switch:
+  - platform: restart
+    name: "Vaillant Restart"  # Restart-Schalter
+
+#text_sensor:
+  #- platform: debug
+   # reset_reason:
+    #  name: "Reset Reason"
+
+sensor:
+  - platform: uptime
+    id: vaillant_uptime
+    name: Vaillant Uptime  # Uptime-Sensor
+    unit_of_measurement: "s"
+  - platform: wifi_signal
+    id: wifi_signal_percent
+    name: "WiFi Signal"  # WiFi-Signalstärke-Sensor
+    # wifi_signal is reported as signal strength/RSSI in dB
+    # convert to percent via filter
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    update_interval: 60s
+    entity_category: "diagnostic"
+    device_class: ""
+  #- platform: debug
+   # free:
+  #    name: "Heap Free"
+   # block:
+    #  name: "Heap Max Block"
+    #loop_time:
+     # name: "Loop Time"
+  # Vaillant stuff
+  - name: "Vorlauf ist HK1"
+    id: vaill0
+    platform: template
+    icon: "mdi:water-percent"
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "Vorlauf set HK1"
+    id: vaill1
+    platform: template
+    unit_of_measurement: "°C"
+    device_class: "temperature"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "Vorlauf soll HK2"
+    id: vaill2
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "Unbekannt 2 byte 32"
+    id: vaill3
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "UnbekTemp 2 byte 2E"
+    id: vaill4
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "UnbekTemp 2byte 0B"
+    id: vaill5
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+  - name: "UnbekTemp 2byte A4"
+    id: vaill6
+    platform: template
+    unit_of_measurement: "°C"
+    update_interval: 120s
+    lambda: "return {};"
+
+  - name: "Unbekant min 1byte AB"
     id: mvaill0
     platform: template
     update_interval: 120s
@@ -146,15 +290,87 @@ binary_sensor:
     id: bvaill0
     platform: template
     lambda: "return {};"
-  - name: "Winter"
+  - name: "Pumpe intern Speicherladepumpe NOT 44"
     id: bvaill1
     platform: template
     lambda: "return {};"
-  - name: "Pumpe intern Speicherladepumpe NOT 44"
+  - name: "Status Unbekannt 3C"
     id: bvaill2
     platform: template
     lambda: "return {};"
-  - name: "Zirkulation"
+  - name: "Status unbekannt 07"
+    id: bvaill3
+    platform: template
+    lambda: "return {};"
+
+  - name: "Invertierte Pumpe intern Speicherladepumpe"
+    platform: template    
+    lambda: |-
+      return !id(bvaill1).state;  // Invertiere den Zustand des Sensors
+
+
+custom_component:
+- lambda: |-
+    auto vx6 = new Vaillantx6(id(x6_uart),
+                              id(vaill0),id(vaill1),id(vaill2),id(vaill3),
+                              id(vaill4),id(vaill5),id(vaill6),
+                              id(mvaill0),
+                              id(hvaill0),
+                              id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3)) ;                          
+    App.register_component(vx6);
+    return {vx6};  // Registrierung der benutzerdefinierten Komponente Vaillantx6
+
+# climate:
+#   - platform: pid
+#     id: vaillant_pid
+#     name: "PID Vorlauf"
+#     sensor: pid_vorlauf_input
+#     heat_output: vaillant_789
+#     default_target_temperature: "50°C"
+#     visual:
+#       min_temperature: 20
+#       max_temperature: 80
+#       temperature_step: 1
+#     control_parameters:
+#       output_averaging_samples: 3
+#       # No Overshoot PID
+#       kp: 0.00460
+#       ki: 0.00046
+#       kd: 0.02878
+#     deadband_parameters:
+#       threshold_high: 0.9°C
+#       threshold_low: -0.9°C
+#       kp_multiplier: 0.0   # proportional gain turned off inside deadband
+#       ki_multiplier: 0.05  # integral accumulates at only 5% of normal ki
+#       kd_multiplier: 0.0   # derviative is turned off inside deadband
+#       deadband_output_averaging_samples: 15   # average the output over 15 samples within the deadband
+
+uart:
+  id: x6_uart
+  tx_pin: GPIO17  # UART TX-Pin
+  rx_pin: GPIO16  # UART RX-Pin
+  baud_rate: 9600
+
+# output:
+#   - platform: ledc
+#     pin: GPIO27
+#     id: vaillant_789
+#     frequency: 30kHz
+#     zero_means_zero: true
+#     min_power: 0.1
+#     max_power: 0.8
+    id: bvaill0
+    platform: template
+    lambda: "return {};"
+  - name: "Pumpe intern Speicherladepumpe NOT 44"
+    id: bvaill1
+    platform: template
+    lambda: "return {};"
+  - name: "Status Unbekannt 3C"
+    id: bvaill2
+    platform: template
+    lambda: "return {};"
+  - name: "Status unbekannt 07"
     id: bvaill3
     platform: template
     lambda: "return {};"
@@ -166,7 +382,7 @@ custom_component:
                               id(vaill4),id(vaill5),id(vaill6),
                               id(mvaill0),
                               id(hvaill0),
-                              id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3))                           
+                              id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3)) ;                          
     App.register_component(vx6);
     return {vx6};  // Registrierung der benutzerdefinierten Komponente Vaillantx6
 
