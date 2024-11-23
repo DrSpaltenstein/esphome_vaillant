@@ -64,6 +64,7 @@ sensor:
     entity_category: "diagnostic"
     device_class: ""
 
+# Temperaturen
   - name: "Vorlauf ist HK1"
     id: vaill0
     platform: template
@@ -72,30 +73,15 @@ sensor:
     update_interval: 120s
     lambda: "return {};"
 
-  - name: "Vorlauf set HK1"
+  - name: "Speichertemperatur ist"
     id: vaill1
     platform: template
     unit_of_measurement: "°C"
-    device_class: "temperature"
     update_interval: 120s
     lambda: "return {};"
 
-  - name: "Vorlauf soll HK2"
+  - name: "00 Test als temp"
     id: vaill2
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-
-  - name: "Vorlauf Soll HK2 2 temp"
-    id: vaill3
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-
-  - name: "Speichertemperatur ist"
-    id: vaill4
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
@@ -105,14 +91,13 @@ sensor:
   - name: "Brennersperrzeit 1 byte 38"
     id: byte1_vaill0
     platform: template
-    unit_of_measurement: "h"
+    unit_of_measurement: "min"
     update_interval: 120s
     lambda: "return {};"
 
-  - name: "Heizungsteillast kW 6C"
+  - name: "00 Test als 1 byte"
     id: byte1_vaill1
     platform: template
-    unit_of_measurement: "kW"
     update_interval: 120s
     lambda: "return {};"
 
@@ -139,10 +124,9 @@ sensor:
     accuracy_decimals: 0
     lambda: "return {};"  
 
-  - name: "Heizstunden3byte"
-    id: byte3_vaill0
+  - name: "00 Test als 2 byte"
+    id: byte2_vaill3
     platform: template
-    unit_of_measurement: "rpm"
     update_interval: 120s
     accuracy_decimals: 0
     lambda: "return {};"  
@@ -154,32 +138,20 @@ binary_sensor:
     id: bvaill0
     platform: template
     lambda: "return {};"
-  - name: "NOT Speicherladepumpe 44"
-    id: bvaill1
-    platform: template
-    lambda: "return {};"
-  - name: "Status Unbekannt 4D"
-    id: bvaill2
-    platform: template
-    lambda: "return {};"
-  - name: "Status Unbekannt 4E"
-    id: bvaill3
-    platform: template
-    lambda: "return {};"
 
-  - name: "Speicherladepumpe"
-    platform: template    
-    lambda: |-
-      return !id(bvaill1).state;  // Invertiere den Zustand des Sensors
+
+  # - name: "Speicherladepumpe"
+  #   platform: template    
+  #   lambda: |-
+  #     return !id(bvaill1).state;  // Invertiere den Zustand des Sensors
 
 custom_component:
 - lambda: |-
     auto vx6 = new Vaillantx6(id(x6_uart),
-                              id(vaill0),id(vaill1),id(vaill2),id(vaill3), id(vaill4),
+                              id(vaill0),id(vaill1),id(vaill2),
                               id(byte1_vaill0),id(byte1_vaill1),
-                              id(byte2_vaill0),id(byte2_vaill1),id(byte2_vaill2),
-                              id(byte3_vaill0),
-                              id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3));                        
+                              id(byte2_vaill0),id(byte2_vaill1),id(byte2_vaill2),id(byte2_vaill3),
+                              id(bvaill0));                     
     App.register_component(vx6);
     return {vx6};  // Registrierung der benutzerdefinierten Komponente Vaillantx6
 
