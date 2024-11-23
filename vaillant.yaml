@@ -63,14 +63,7 @@ sensor:
     update_interval: 60s
     entity_category: "diagnostic"
     device_class: ""
-  #- platform: debug
-   # free:
-  #    name: "Heap Free"
-   # block:
-    #  name: "Heap Max Block"
-    #loop_time:
-     # name: "Loop Time"
-  # Vaillant stuff
+
   - name: "Vorlauf ist HK1"
     id: vaill0
     platform: template
@@ -78,6 +71,7 @@ sensor:
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
+
   - name: "Vorlauf set HK1"
     id: vaill1
     platform: template
@@ -85,61 +79,75 @@ sensor:
     device_class: "temperature"
     update_interval: 120s
     lambda: "return {};"
+
   - name: "Vorlauf soll HK2"
     id: vaill2
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "Unbekannt 2 byte 32"
+
+  - name: "Vorlauf Soll HK2 2 temp"
     id: vaill3
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "UnbekTemp 2 byte 2E"
+
+  - name: "Speichertemperatur ist"
     id: vaill4
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
-  - name: "UnbekTemp 2byte 0B"
-    id: vaill5
+
+# Sensor 1 byte
+  - name: "Brennersperrzeit 1 byte 38"
+    id: byte1_vaill0
     platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
-  - name: "Speichertemperatur ist"
-    id: vaill6
-    platform: template
-    unit_of_measurement: "°C"
+    unit_of_measurement: "h"
     update_interval: 120s
     lambda: "return {};"
 
-  - name: "Unbekant min 1byte AB"
-    id: mvaill0
+  - name: "Heizungsteillast kW 6C"
+    id: byte1_vaill1
     platform: template
+    unit_of_measurement: "kW"
     update_interval: 120s
-    lambda: "return {};"    
-  # - name: "Used as input sensor for the PID component"
-  #   id: pid_vorlauf_input
-  #   internal: true
-  #   platform: copy
-  #   source_id: vaill3
-  #   unit_of_measurement: "°C"
-  #   filters:
-  #     - median:
-  #         window_size: 3
-  #         send_every: 1
+    lambda: "return {};"
 
-
-  - name: "Unbekant h 1byte AB"
-    id: hvaill0
+# Sensor 2 byte
+  - name: "Heizstunden 28"
+    id: byte2_vaill0
     platform: template
     unit_of_measurement: "h"
     update_interval: 120s
     accuracy_decimals: 0
     lambda: "return {};"    
+
+  - name: "Brennerstarts Heizen 29"
+    id: byte2_vaill1
+    platform: template
+    update_interval: 120s
+    lambda: "return {};"   
+
+  - name: "Drehzahl Gebläse soll 24"
+    id: byte2_vaill2
+    platform: template
+    unit_of_measurement: "rpm"
+    update_interval: 120s
+    accuracy_decimals: 0
+    lambda: "return {};"  
+
+  - name: "Heizstunden3byte"
+    id: byte3_vaill0
+    platform: template
+    unit_of_measurement: "rpm"
+    update_interval: 120s
+    accuracy_decimals: 0
+    lambda: "return {};"  
+
+
 
 binary_sensor:
   - name: "Brenner"
@@ -150,11 +158,11 @@ binary_sensor:
     id: bvaill1
     platform: template
     lambda: "return {};"
-  - name: "Status unbekannt 3C"
+  - name: "Status Unbekannt 4D"
     id: bvaill2
     platform: template
     lambda: "return {};"
-  - name: "Status Unbekannt 07"
+  - name: "Status Unbekannt 4E"
     id: bvaill3
     platform: template
     lambda: "return {};"
@@ -167,10 +175,10 @@ binary_sensor:
 custom_component:
 - lambda: |-
     auto vx6 = new Vaillantx6(id(x6_uart),
-                              id(vaill0),id(vaill1),id(vaill2),id(vaill3),
-                              id(vaill4),id(vaill5),id(vaill6),
-                              id(mvaill0),
-                              id(hvaill0),
+                              id(vaill0),id(vaill1),id(vaill2),id(vaill3), id(vaill4),
+                              id(byte1_vaill0),id(byte1_vaill1),
+                              id(byte2_vaill0),id(byte2_vaill1),id(byte2_vaill2),
+                              id(byte3_vaill0),
                               id(bvaill0),id(bvaill1),id(bvaill2),id(bvaill3));                        
     App.register_component(vx6);
     return {vx6};  // Registrierung der benutzerdefinierten Komponente Vaillantx6

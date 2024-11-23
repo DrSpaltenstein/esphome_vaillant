@@ -12,28 +12,41 @@ void logCmd(const char *tag, byte *cmd)
   ESP_LOGD("Vaillantx6", "%s: 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x", tag, cmd[0], cmd[1], cmd[2], cmd[3], cmd[4], cmd[5], cmd[6]);
 }
 
+// Enumerationen (enum) sind eine Möglichkeit, eine Gruppe von konstanten Ganzzahlwerten mit Namen zu versehen.
+// Hier wird ein enum namens VaillantReturnTypes definiert.
+// Dieser enum enthält verschiedene Rückgabewerttypen: None, Temperature, SensorState, Bool, Signal1Byte, und Value2Byte.
+// None ist explizit auf 0 gesetzt, und die nachfolgenden Werte werden automatisch auf 1, 2, 3, usw. gesetzt
 enum VaillantReturnTypes
 {
   None = 0,
-  Temperature,
-  SensorState,
-  Bool,
-  Minutes,
-  Hours
+  Temperature,//1
+  SensorState,//2
+  Bool,//3
+  Signal1Byte,//4
+  Value2Byte,//5
+  Value3Byte,//6
 };
 
+// Diese Funktion nimmt einen Wert des Typs VaillantReturnTypes als Eingabeparameter t an und gibt einen uint8_t (einen 8-Bit-Unsigned-Integer) zurück.
+// Mit Hilfe einer switch-Anweisung wird überprüft, welcher Rückgabewerttyp übergeben wurde.
+// Falls SensorState, Bool oder Signal1Byte: Die Funktion gibt 1 zurück, was bedeutet, dass diese Typen jeweils 1 Byte lang sind.
+// Falls Temperature oder Value2Byte: Die Funktion gibt 2 zurück, was bedeutet, dass diese Typen jeweils 2 Bytes lang sind.
+// Für alle anderen Werte (default): Die Funktion gibt 0 zurück.
+// Diese Funktion ermöglicht es, die Länge der Rückgabewerte basierend auf ihrem Typ zu bestimmen, was nützlich sein kann, um die richtige Menge an Speicherplatz für die Verarbeitung dieser Werte zu reservieren.
 uint8_t VaillantReturnTypeLength(VaillantReturnTypes t)
 {
   switch (t)
   {
   case SensorState:
   case Bool:
-  case Minutes:
+  case Signal1Byte://Value1Byte
     return 1;
   case Temperature:
     return 2;
-  case Hours:
+  case Value2Byte:
     return 2;
+  case Value3Byte:
+    return 3;    
   default:
     return 0;
   }
@@ -47,13 +60,35 @@ float VaillantParseTemperature(byte *answerBuff, uint8_t offset)
   return i / (16.0f);
 }
 
-float VaillantParseHours(byte *answerBuff, uint8_t offset)
+// Zusammengefasst: Der Code liest zwei aufeinanderfolgende Bytes aus dem answerBuff-Array und kombiniert sie zu einem einzelnen 16-Bit-Integer. 
+// Das erste Byte wird nach links verschoben, um das höherwertige Byte des 16-Bit-Werts zu bilden, und das zweite Byte wird als das niedrigwertige Byte verwendet.
+// Diese Technik wird häufig verwendet, um Daten aus Byte-Arrays zu lesen, insbesondere bei der Arbeit mit Protokollen und binären Datenformaten.
+
+// Hier ist eine detaillierte Erklärung:
+// Bit-Verschiebung (<< 8):
+// answerBuff[offset] nimmt den Wert des Bytes am Index offset im answerBuff-Array.
+// << 8 verschiebt die Bits dieses Wertes um 8 Positionen nach links. Das bedeutet, dass der ursprüngliche Wert des Bytes mit 256 multipliziert wird, was es effektiv zu einem höheren Byte eines 16-Bit-Wertes macht.
+
+// Bitweise ODER-Operation (|):
+// answerBuff[offset + 1] nimmt den Wert des Bytes am Index offset + 1 im answerBuff-Array.
+// Die bitweise ODER-Operation (|) kombiniert den höherwertigen Byte-Wert (der durch die Bit-Verschiebung erstellt wurde) mit dem niedrigwertigen Byte-Wert.
+float VaillantParse2byte(byte *answerBuff, uint8_t offset)// wie Temp 2 byte ohne Teiler 16
 {
-  // Combine two bytes from the answer buffer into a 16-bit integer
+  // Combine two bytes from the answer buffer into a 16-bit integer. First byte convert from 8bit to 16 and move 0001 0010 --> 0001 0010 0000 0000 combine with: 0011 0100
+  // 0001 0010 0000 0000 ODER 0000 0000 0011 0100 ------------------- 0001 0010 0011 0100 (Binär) oder 0x1234 (Hexadezimal)
   int16_t i = (answerBuff[offset] << 8) | answerBuff[offset + 1];
   // Return the integer value as a float
   return i;
 }
+
+float VaillantParse3byte(byte *answerBuff, uint8_t offset)// wie VaillantParse2byte
+{
+  // Combine three bytes from the answer buffer into a 24-bit integer.
+  int16_t i = (answerBuff[offset] << 16) | answerBuff[offset + 1] << 8 | answerBuff[offset + 2];
+  // Return the integer value as a float
+  return i;
+}
+
 
 int VaillantParseBool(byte *answerBuff, uint8_t offset)
 {
@@ -74,7 +109,7 @@ int VaillantParseBool(byte *answerBuff, uint8_t offset)
 struct VaillantCommand
 {
   std::string Name; // Name des Befehls
-  byte Address; // Adresse des Befehls
+  byte Address; // Adresse des Befehls 
   VaillantReturnTypes ReturnTypes[RETURN_TYPE_COUNT];
   // SensorID contains the ID of the sensor to use, corresponding to the ReturnType.
   // Use -1 to not assign a sensor.
@@ -86,28 +121,32 @@ const VaillantCommand vaillantCommands[] = {
     {"Vorlauf Ist HK1", 0x18, {Temperature, SensorState, None}, {0, -1, -1}},//vermutlich Temperatur im Kesselkreislauf
     {"Vorlauf Set HK1", 0x19, {Temperature, None, None}, {1, -1, -1}},// Heizkreis 1 sollwert Dehregler, limitiert auch HK2
     {"Vorlauf Soll HK2", 0x39, {Temperature, None, None}, {2, -1, -1}},//Sollwert HK2 als min (VRC/789 und Limit von Drehregler)
-    {"Unbekannt 2 byte 32", 0x32, {Temperature, None, None}, {3, -1, -1}},//
-    {"UnbekTemp 2 byte 2E", 0x2E, {Temperature, None, None}, {4, -1, -1}},//
-    {"UnbekTemp 2byte 0B", 0x0B, {Temperature, None, None}, {5, -1, -1}},//
-    //{"UnbekTemp 2byte A4", 0xA4, {Temperature, None, None}, {6, -1, -1}},//
-    {"Speichertemperatur ist", 0x17, {Temperature, None, None}, {6, -1, -1}},//geht
+    {"Vorlauf Soll HK2 2 temp", 0x39, {Temperature, Temperature, None}, {3, -1, -1}},// 
+    {"Speichertemperatur ist", 0x17, {Temperature, None, None}, {4, -1, -1}},//geht
 
-    {"Unbekant min 1byte AB", 0xAB, {Minutes, None, None}, {0, -1, -1}},//
-    {"Unbekant h 1byte AB", 0xAB, {Hours, Hours, None}, {0, -1, -1}},//
+    {"Brennersperrzeit 1 byte 38", 0x38, {Signal1Byte, None, None}, {0, -1, -1}},//
+    {"Heizungsteillast kW 6C", 0x6C, {Signal1Byte, None, None}, {1, -1, -1}},//
+
+    {"Heizstunden", 0x28, {Value2Byte, Value2Byte, None}, {0, -1, -1}},//
+    {"Brennerstarts Heizen 29", 0x29, {Value2Byte, Value2Byte, None}, {1, -1, -1}},//
+    {"Drehzahl Gebläse soll 24", 0x24, {Value2Byte, Value2Byte, None}, {2, -1, -1}},//
+
+    {"Heizstunden3byte", 0x28, {Value3Byte, None, None}, {0, -1, -1}},//
 
     {"Brenner", 0x0D, {Bool, None, None}, {0, -1, -1}},//geht
     {"Pumpe intern Speicherladepumpe NOT 44", 0x44, {Bool, None, None}, {1, -1, -1}},//bei brenner an geht pumpe intern aus
-    {"Status Unbekannt 3C", 0x3C, {Bool, None, None}, {2, -1, -1}},//
-    {"Status unbekannt 07", 0x07, {Bool, None, None}, {3, -1, -1}},//
+    {"Status Unbekannt 4D", 0x4D, {Bool, None, None}, {2, -1, -1}},//
+    {"Status unbekannt 4E", 0x4E, {Bool, None, None}, {3, -1, -1}},//
 };
 const byte vaillantCommandsSize = sizeof(vaillantCommands) / sizeof *(vaillantCommands);
 
 class Vaillantx6 : public PollingComponent, public UARTDevice
 {
   // Sensors as provided by custom_component lambda call
-  Sensor *temperatureSensors[7];  // Array for temperature sensors
-  Sensor *minutesSensor[1];  // Array for minute sensors
-  Sensor *hourSensor[1];  // Array for hour sensors
+  Sensor *temperatureSensors[5];  // Array for temperature sensors
+  Sensor *Signal1ByteSensor[2];  // Array for minute sensors
+  Sensor *Value2ByteSensor[3];  // Array for two byte sensors
+  Sensor *Value3ByteSensor[1];  // Array for three byte sensors
   BinarySensor *binarySensors[4];  // Array for binary sensors
   
   // All commands start with the startBytes sequence
@@ -115,10 +154,10 @@ class Vaillantx6 : public PollingComponent, public UARTDevice
 
 public:
   Vaillantx6(UARTComponent *parent,
-             Sensor *tSensor0, Sensor *tSensor1, Sensor *tSensor2, Sensor *tSensor3,
-             Sensor *tSensor4, Sensor *tSensor5, Sensor *tSensor6,
-             Sensor *mSensor0,
-             Sensor *hSensor0, 
+             Sensor *tSensor0, Sensor *tSensor1, Sensor *tSensor2, Sensor *tSensor3, Sensor *tSensor4, 
+             Sensor *oneBSensor0, Sensor *oneBSensor1,
+             Sensor *twoBSensor0, Sensor *twoBSensor1, Sensor *twoBSensor2, 
+             Sensor *threeBSensor0, 
              BinarySensor *bSensor0, BinarySensor *bSensor1, BinarySensor *bSensor2, BinarySensor *bSensor3
              )
       : PollingComponent(10000), UARTDevice(parent)
@@ -129,14 +168,18 @@ public:
     temperatureSensors[2] = tSensor2; // Flow temperature target
     temperatureSensors[3] = tSensor3; // Flow temperature 789 target
     temperatureSensors[4] = tSensor4; // Return temperature is
-    temperatureSensors[5] = tSensor5; // Domestic hot water temperature is
-    temperatureSensors[6] = tSensor6; // Domestic hot water temperature target
 
-    // Minute sensors
-    minutesSensor[0] = mSensor0; // Remaining burner lockout time
 
-    // Hour sensors
-    hourSensor[0] = hSensor0; // Time until maintenance
+    // OneByte sensors
+    Signal1ByteSensor[0] = oneBSensor0; // Remaining burner lockout time
+    Signal1ByteSensor[1] = oneBSensor1; // Remaining burner lockout time
+
+    // TwoByte sensors
+    Value2ByteSensor[0] = twoBSensor0; // Time until maintenance
+    Value2ByteSensor[1] = twoBSensor1; // Time until maintenance
+    Value2ByteSensor[2] = twoBSensor2; // Time until maintenance
+
+    Value3ByteSensor[0] = threeBSensor0; // Time until maintenance    
    
     // Binary sensors
     binarySensors[0] = bSensor0; // Burner
@@ -270,10 +313,10 @@ public:
 
     for (int i = 0; i < vaillantCommandsSize; i++)
     {
-      buildPacket(cmdPacket, vaillantCommands[i].Address);
-      logCmd(vaillantCommands[i].Name.c_str(), cmdPacket);
+      buildPacket(cmdPacket, vaillantCommands[i].Address): //Ein Befehls-Paket wird erstellt.
+      logCmd(vaillantCommands[i].Name.c_str(), cmdPacket);//Der Befehl wird protokolliert.
 
-      answerLen = sendPacket(answerBuff, cmdPacket);
+      answerLen = sendPacket(answerBuff, cmdPacket);//Paket wird gesendet
       if (answerLen < 0)
       {
         ESP_LOGE("Vaillantx6", "sendPacket returned an error: %d", answerLen);
@@ -314,12 +357,15 @@ public:
           binarySensors[sensorID]->publish_state(b);
           goto exit_type_loop;
         }
-        case Minutes:
-          minutesSensor[sensorID]->publish_state(answerBuff[2]);
+        case Signal1Byte:
+          Signal1ByteSensor[sensorID]->publish_state(answerBuff[2]);
           goto exit_type_loop;
-          
-        case Hours:
-          hourSensor[sensorID]->publish_state(VaillantParseHours(answerBuff, 2));
+
+        case Value2Byte:
+          Value2ByteSensor[sensorID]->publish_state(VaillantParse2byte(answerBuff, 2));
+
+        case Value3Byte:
+          Value3ByteSensor[sensorID]->publish_state(VaillantParse3byte(answerBuff, 3));
         }
       }
     exit_type_loop:;
