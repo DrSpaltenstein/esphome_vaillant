@@ -1,8 +1,9 @@
 esphome:
-  name: vaillantvkktest
-  friendly_name: vaillantvkktest
+  name: vaillantvkk226
+  friendly_name: vaillantvkk226
   includes:
-    - vaillantx6mod.h  # Einbindung der Datei vaillantx6.h
+    ##- vaillantx6mod.h  # Einbindung der Datei vaillantx6mod.h
+    - vaillantx6.h  # Einbindung der Datei vaillantx6.h    
 esp32:
   board: esp32dev
   framework:
@@ -15,7 +16,7 @@ logger:  # Aktivierung des Loggers
 # Enable Home Assistant API
 api:
   encryption:
-    key: "pzoRsVCmlqF/bRS8wAV3qS1bjkAG+PfBYz9aCo9UG1c="
+    key: "BlLq6K7NH3wmHlVg9Z9L/nGEsJN4/9jgRmIQogqMybE="
 
 web_server:
   port: 80  # Web-Server-Port
@@ -25,7 +26,7 @@ web_server:
 
 ota:
   - platform: esphome
-    password: "e3f0de663b7710882baf210db3c6174b"
+    password: "acc60f0ee262fbd990522f0428d6fd9a"
 
 wifi:
   ssid: !secret wifi_ssid  # WiFi-SSID aus geheimen Variablen
@@ -80,55 +81,39 @@ sensor:
     update_interval: 120s
     lambda: "return {};"
 
-  - name: "00 Test als temp 1"
+  - name: "Vorlauf Soll HK2"
     id: vaill2
     platform: template
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
 
-  - name: "00 Test als temp 2"
-    id: vaill3
-    platform: template
-    unit_of_measurement: "°C"
-    update_interval: 120s
-    lambda: "return {};"
 
 # Sensor 1 byte
-  - name: "Brennersperrzeit 1 byte 38"
-    id: byte1_vaill0
-    platform: template
-    unit_of_measurement: "min"
-    update_interval: 120s
-    lambda: "return {};"
+  # - name: "Brennersperrzeit 1 byte 38"
+  #   id: byte1_vaill0
+  #   platform: template
+  #   unit_of_measurement: "min"
+  #   update_interval: 120s
+  #   lambda: "return {};"
 
-  - name: "00 Test als 1 byte 1"
-    id: byte1_vaill1
-    platform: template
-    update_interval: 120s
-    lambda: "return {};"
 
-  - name: "00 Test als 1 byte 2"
-    id: byte1_vaill2
-    platform: template
-    update_interval: 120s
-    lambda: "return {};"
 
 # Sensor 2 byte
-  - name: "00 Test als 2 byte 1"
+  - name: "Brennerstarts Heizen"
     id: byte2_vaill0
     platform: template
     update_interval: 120s
     accuracy_decimals: 0
     lambda: "return {};"    
 
-  - name: "Brennerstarts Heizen 29"
+  - name: "Brennerstarts für Warmwasser"
     id: byte2_vaill1
     platform: template
     update_interval: 120s
     lambda: "return {};"   
 
-  - name: "Drehzahl Gebläse soll 24"
+  - name: "Gebläse Drehzahl"
     id: byte2_vaill2
     platform: template
     unit_of_measurement: "rpm"
@@ -136,13 +121,13 @@ sensor:
     accuracy_decimals: 0
     lambda: "return {};"  
 
-  - name: "00 Test als 2 byte 2"
+  - name: "Stunden bis Wartung"
     id: byte2_vaill3
     platform: template
+    unit_of_measurement: "h"
     update_interval: 120s
     accuracy_decimals: 0
     lambda: "return {};"  
-
 
 
 binary_sensor:
@@ -151,19 +136,28 @@ binary_sensor:
     platform: template
     lambda: "return {};"
 
+  - name: "Zirkulation"
+    id: bvaill1
+    platform: template
+    lambda: "return {};"
+    
+  - name: "Speicherladepumpe not"
+    id: bvaill2
+    platform: template
+    lambda: "return {};"
 
-  # - name: "Speicherladepumpe"
-  #   platform: template    
-  #   lambda: |-
-  #     return !id(bvaill1).state;  // Invertiere den Zustand des Sensors
+  - name: "Speicherladepumpe"
+    platform: template    
+    lambda: |-
+      return !id(bvaill2).state;  // Invertiere den Zustand des Sensors
 
 custom_component:
 - lambda: |-
     auto vx6 = new Vaillantx6(id(x6_uart),
-                              id(vaill0),id(vaill1),id(vaill2),id(vaill3),
-                              id(byte1_vaill0),id(byte1_vaill1),id(byte1_vaill2),
+                              id(vaill0),id(vaill1),id(vaill2),
+                              //id(byte1_vaill0),id(byte1_vaill1),id(byte1_vaill2),
                               id(byte2_vaill0),id(byte2_vaill1),id(byte2_vaill2),id(byte2_vaill3),
-                              id(bvaill0));                     
+                              id(bvaill0),id(bvaill1),id(bvaill2));                     
     App.register_component(vx6);
     return {vx6};  // Registrierung der benutzerdefinierten Komponente Vaillantx6
 

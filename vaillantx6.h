@@ -35,7 +35,7 @@ enum VaillantReturnTypes
   Temperature,//1
   SensorState,//2
   Bool,//3
-  Signal1Byte,//4
+  // Signal1Byte,//4
   Signal2Byte//5
   //Temperature2
 };
@@ -52,8 +52,8 @@ uint8_t VaillantReturnTypeLength(VaillantReturnTypes t)
   {
   case SensorState:
   case Bool:
-  case Signal1Byte://Value1Byte
-    return 1;
+  // case Signal1Byte://Value1Byte
+  //   return 1;
   case Temperature:
     return 2;
   case Signal2Byte:
@@ -68,7 +68,7 @@ float VaillantParseTemperature(byte *answerBuff, uint8_t offset)
   // Combine two bytes from the answer buffer into a 16-bit integer
   int16_t i = (answerBuff[offset] << 8) | answerBuff[offset + 1];
   // Convert the integer value to a float and divide by 16 to get the temperature
-  // Beispiel Horlauf ist HK1
+  // Beispiel Vorlauf ist HK1
   // antwort x06 x00 x03 x27 x00 x22
   // offset = 2
   // es werden x03 + x27 kombiniert --> HEX 0327
@@ -127,42 +127,43 @@ struct VaillantCommand
 
 //Var_txt_NameTest:5
 const VaillantCommand vaillantCommands[] = {
-    {"Vorlauf Ist HK1", 0x18, {Temperature, SensorState, None}, {0, -1, -1}},//vermutlich Temperatur im Kesselkreislauf
+    {"Vorlauf Ist HK1", 0x18, {Temperature, SensorState, None}, {0, -1, -1}},//Temperatur im HK1 Kesselkreislauf
     {"Speichertemperatur ist", 0x17, {Temperature, None, None}, {1, -1, -1}},//geht    
-    {"00 test Temp 1", 0x4b, {Temperature, None, None}, {2, -1, -1}},//geht    
-    {"00 test Temp 2", 0x4c, {Temperature, None, None}, {3, -1, -1}},//geht    
+    {"Vorlauf Soll HK2", 0x39, {Temperature, None, None}, {2, -1, -1}},//Sollwert HK2 als min (VRC/789 und Limit von Drehregler) 
+
 // 1 byte lang
-    {"Brennersperrzeit 1 byte 38", 0x38, {Signal1Byte, None, None}, {0, -1, -1}},//
-    {"00 test 1 byte 1", 0x4b, {Signal1Byte, None, None}, {1, -1, -1}},//
-    {"00 test 1 byte 2", 0x4c, {Signal1Byte, None, None}, {2, -1, -1}},//
+    //{"Brennersperrzeit 1 byte 38", 0x38, {Signal1Byte, None, None}, {0, -1, -1}},//
 
 //2 Byte lang
-    {"00 test 2 byte 1", 0x4b, {Signal2Byte, Signal2Byte, None}, {0, -1, -1}},//
-    {"Brennerstarts Heizen 29", 0x29, {Signal2Byte, Signal2Byte, None}, {1, -1, -1}},//
-    {"Drehzahl Gebläse soll 24", 0x24, {Signal2Byte, Signal2Byte, None}, {2, -1, -1}},//
-    {"00 test 2 byte 2", 0x4c, {Signal2Byte, Signal2Byte, None}, {3, -1, -1}},//
+    {"Brennerstarts Heizen", 0x29, {Signal2Byte, Signal2Byte, None}, {0, -1, -1}},//
+    {"Brennerstarts für Warmwasser", 0x23, {Signal2Byte, Signal2Byte, None}, {1, -1, -1}},//
+    {"Gebläse Drehzahl", 0x83, {Signal2Byte, Signal2Byte, None}, {2, -1, -1}},//
+    {"Stunden bis Wartung", 0xAC, {Signal2Byte, Signal2Byte, None}, {3, -1, -1}},//geht
 
     {"Brenner", 0x0D, {Bool, None, None}, {0, -1, -1}},//geht
+    {"Zirkulation", 0xAF, {Bool, None, None}, {1, -1, -1}},//
+    {"Status Ext Pumpe Speicherladepumpe NOT 3F", 0x3F, {Bool, None, None}, {2, -1, -1}},//signal vorhanden = Pumpe intern vermutlich speicherladepumpe
+
 };
 const byte vaillantCommandsSize = sizeof(vaillantCommands) / sizeof *(vaillantCommands);
 
 class Vaillantx6 : public PollingComponent, public UARTDevice
 {
   // Sensors as provided by custom_component lambda call
-  Sensor *temperatureSensors[4];  // Array for temperature sensors
-  Sensor *Signal1ByteSensor[3];  // Array for minute sensors
+  Sensor *temperatureSensors[3];  // Array for temperature sensors
+  //Sensor *Signal1ByteSensor[3];  // Array for minute sensors
   Sensor *Signal2ByteSensor[4];  // Array for two byte sensors
-  BinarySensor *binarySensors[1];  // Array for binary sensors
+  BinarySensor *binarySensors[3];  // Array for binary sensors
   
   // All commands start with the startBytes sequence
   const byte startBytes[4] = {0x07, 0x00, 0x00, 0x00};  // Start sequence for commands
 
 public:
   Vaillantx6(UARTComponent *parent,
-             Sensor *tSensor0, Sensor *tSensor1, Sensor *tSensor2, Sensor *tSensor3,
-             Sensor *oneBSensor0, Sensor *oneBSensor1,Sensor *oneBSensor2,
+             Sensor *tSensor0, Sensor *tSensor1, Sensor *tSensor2,
+             //Sensor *oneBSensor0, Sensor *oneBSensor1,Sensor *oneBSensor2,
              Sensor *twoBSensor0, Sensor *twoBSensor1, Sensor *twoBSensor2, Sensor *twoBSensor3, 
-             BinarySensor *bSensor0
+             BinarySensor *bSensor0, BinarySensor *bSensor1, BinarySensor *bSensor2
              )
       : PollingComponent(10000), UARTDevice(parent)
   {
@@ -170,12 +171,12 @@ public:
     temperatureSensors[0] = tSensor0; // Flow temperature is
     temperatureSensors[1] = tSensor1; // Flow temperature set
     temperatureSensors[2] = tSensor2; // Flow temperature target
-    temperatureSensors[3] = tSensor3; // Flow temperature target
+
 
     // OneByte sensors
-    Signal1ByteSensor[0] = oneBSensor0; // Remaining burner lockout time
-    Signal1ByteSensor[1] = oneBSensor1; // Remaining burner lockout time
-    Signal1ByteSensor[2] = oneBSensor2; // Remaining burner lockout time
+    //Signal1ByteSensor[0] = oneBSensor0; // Remaining burner lockout time
+    //Signal1ByteSensor[1] = oneBSensor1; // Remaining burner lockout time
+    //Signal1ByteSensor[2] = oneBSensor2; // Remaining burner lockout time
 
 
     // TwoByte sensors
@@ -186,6 +187,8 @@ public:
 
     // Binary sensors
     binarySensors[0] = bSensor0; // Burner
+    binarySensors[1] = bSensor0; // Zirkulation
+    binarySensors[2] = bSensor0; // Speicherladepumpe
   }
 
   /**
@@ -366,9 +369,9 @@ public:
           binarySensors[sensorID]->publish_state(b);
           goto exit_type_loop;
         }
-        case Signal1Byte:
-          Signal1ByteSensor[sensorID]->publish_state(answerBuff[2]);
-          goto exit_type_loop;
+        // case Signal1Byte:
+        //   Signal1ByteSensor[sensorID]->publish_state(answerBuff[2]);
+        //   goto exit_type_loop;
 
         case Signal2Byte:
           Signal2ByteSensor[sensorID]->publish_state(VaillantParse2byte(answerBuff, 2));
