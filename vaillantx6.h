@@ -129,18 +129,18 @@ struct VaillantCommand
 const VaillantCommand vaillantCommands[] = {
     {"Vorlauf Ist HK1", 0x18, {Temperature, SensorState, None}, {0, -1, -1}},//vermutlich Temperatur im Kesselkreislauf
     {"Speichertemperatur ist", 0x17, {Temperature, None, None}, {1, -1, -1}},//geht    
-    {"test Temp 1", 0x4b, {Temperature, None, None}, {2, -1, -1}},//geht    
-    {"test Temp 2", 0x4c, {Temperature, None, None}, {3, -1, -1}},//geht    
+    {"00 test Temp 1", 0x4b, {Temperature, None, None}, {2, -1, -1}},//geht    
+    {"00 test Temp 2", 0x4c, {Temperature, None, None}, {3, -1, -1}},//geht    
 // 1 byte lang
     {"Brennersperrzeit 1 byte 38", 0x38, {Signal1Byte, None, None}, {0, -1, -1}},//
-    {"test 1 byte 1", 0x4b, {Signal1Byte, None, None}, {1, -1, -1}},//
-    {"test 1 byte 2", 0x4c, {Signal1Byte, None, None}, {2, -1, -1}},//
+    {"00 test 1 byte 1", 0x4b, {Signal1Byte, None, None}, {1, -1, -1}},//
+    {"00 test 1 byte 2", 0x4c, {Signal1Byte, None, None}, {2, -1, -1}},//
 
 //2 Byte lang
-    {"test 2 byte 1", 0x4b, {Signal2Byte, Signal2Byte, None}, {0, -1, -1}},//
+    {"00 test 2 byte 1", 0x4b, {Signal2Byte, Signal2Byte, None}, {0, -1, -1}},//
     {"Brennerstarts Heizen 29", 0x29, {Signal2Byte, Signal2Byte, None}, {1, -1, -1}},//
     {"Drehzahl Gebläse soll 24", 0x24, {Signal2Byte, Signal2Byte, None}, {2, -1, -1}},//
-    {"test 2 byte 2", 0x4c, {Signal2Byte, Signal2Byte, None}, {3, -1, -1}},//
+    {"00 test 2 byte 2", 0x4c, {Signal2Byte, Signal2Byte, None}, {3, -1, -1}},//
 
     {"Brenner", 0x0D, {Bool, None, None}, {0, -1, -1}},//geht
 };
