@@ -41,7 +41,7 @@ wifi:
 
 switch:
   - platform: restart
-    name: "Vaillant Restart"  # Restart-Schalter
+    name: "Restart"  # Restart-Schalter
 
 #text_sensor:
   #- platform: debug
@@ -69,7 +69,7 @@ sensor:
   - name: "Vorlauf ist HK1"
     id: vaill0
     platform: template
-    icon: "mdi:water-percent"
+    #icon: "mdi:heating-coil"
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
@@ -77,6 +77,7 @@ sensor:
   - name: "Speichertemperatur ist"
     id: vaill1
     platform: template
+    icon: "mdi:water-boiler"
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
@@ -84,60 +85,88 @@ sensor:
   - name: "Vorlauf Soll HK2"
     id: vaill2
     platform: template
+    icon: "mdi:heating-coil"
     unit_of_measurement: "°C"
     update_interval: 120s
     lambda: "return {};"
 
 
-# Sensor 1 byte
-  # - name: "Brennersperrzeit 1 byte 38"
-  #   id: byte1_vaill0
-  #   platform: template
-  #   unit_of_measurement: "min"
-  #   update_interval: 120s
-  #   lambda: "return {};"
-
+#Sensor 1 byte
+  - name: "Brennersperrzeit" # 1 byte 38
+    id: byte1_vaill0
+    platform: template
+    icon: "mdi:fire-off"
+    unit_of_measurement: "min"
+    update_interval: 30s
+    lambda: "return {};"
 
 
 # Sensor 2 byte
-  - name: "Brennerstarts Heizen"
+  - name: "Brennerstarts Heizen orig"
     id: byte2_vaill0
     platform: template
     update_interval: 120s
-    accuracy_decimals: 0
+    #accuracy_decimals: 0
     lambda: "return {};"    
+    
+  - name: "Brennerstarts Heizen"
+    platform: template    
+    #update_interval: 10s
+    lambda: |-
+      return id(byte2_vaill0).state*100;
 
-  - name: "Brennerstarts für Warmwasser"
+  - name: "Brennerstarts für Warmwasser orig"
     id: byte2_vaill1
     platform: template
-    update_interval: 120s
+    #update_interval: 120s
     lambda: "return {};"   
+
+
+  - name: "Brennerstarts für Warmwasser"
+    platform: template    
+    #update_interval: 10s
+    lambda: |-
+      return id(byte2_vaill1).state*100;
+
 
   - name: "Gebläse Drehzahl"
     id: byte2_vaill2
     platform: template
+    icon: "mdi:car-turbocharger"
     unit_of_measurement: "rpm"
     update_interval: 120s
     accuracy_decimals: 0
     lambda: "return {};"  
 
+
+  - name: "HeizLeistung"
+    platform: template    
+    icon: "mdi:speedometer"
+    unit_of_measurement: "%"
+    update_interval: 30s
+    lambda: |-
+      return id(byte2_vaill2).state/5400*100;//5358
+
   - name: "Stunden bis Wartung"
     id: byte2_vaill3
     platform: template
+    icon: "mdi:timer-sand"
     unit_of_measurement: "h"
     update_interval: 120s
-    accuracy_decimals: 0
+    #accuracy_decimals: 0
     lambda: "return {};"  
 
 
 binary_sensor:
   - name: "Brenner"
     id: bvaill0
+    icon: "mdi:fire"
     platform: template
     lambda: "return {};"
 
   - name: "Zirkulation"
     id: bvaill1
+    icon: "mdi:water-pump"
     platform: template
     lambda: "return {};"
     
@@ -148,55 +177,24 @@ binary_sensor:
 
   - name: "Speicherladepumpe"
     platform: template    
+    icon: "mdi:pump"
     lambda: |-
       return !id(bvaill2).state;  // Invertiere den Zustand des Sensors
+
+# Wenn die geschweiften Klammern ({}) in der Lambda-Funktion für dich funktionieren, bedeutet das, dass die Klasse Vaillantx6 bereits die Sensorwerte korrekt an die template-Sensoren übergibt.
 
 custom_component:
 - lambda: |-
     auto vx6 = new Vaillantx6(id(x6_uart),
                               id(vaill0),id(vaill1),id(vaill2),
-                              //id(byte1_vaill0),id(byte1_vaill1),id(byte1_vaill2),
+                              id(byte1_vaill0),//id(byte1_vaill1),id(byte1_vaill2),
                               id(byte2_vaill0),id(byte2_vaill1),id(byte2_vaill2),id(byte2_vaill3),
                               id(bvaill0),id(bvaill1),id(bvaill2));                     
     App.register_component(vx6);
     return {vx6};  // Registrierung der benutzerdefinierten Komponente Vaillantx6
-
-# climate:
-#   - platform: pid
-#     id: vaillant_pid
-#     name: "PID Vorlauf"
-#     sensor: pid_vorlauf_input
-#     heat_output: vaillant_789
-#     default_target_temperature: "50°C"
-#     visual:
-#       min_temperature: 20
-#       max_temperature: 80
-#       temperature_step: 1
-#     control_parameters:
-#       output_averaging_samples: 3
-#       # No Overshoot PID
-#       kp: 0.00460
-#       ki: 0.00046
-#       kd: 0.02878
-#     deadband_parameters:
-#       threshold_high: 0.9°C
-#       threshold_low: -0.9°C
-#       kp_multiplier: 0.0   # proportional gain turned off inside deadband
-#       ki_multiplier: 0.05  # integral accumulates at only 5% of normal ki
-#       kd_multiplier: 0.0   # derviative is turned off inside deadband
-#       deadband_output_averaging_samples: 15   # average the output over 15 samples within the deadband
 
 uart:
   id: x6_uart
   tx_pin: GPIO17  # UART TX-Pin
   rx_pin: GPIO16  # UART RX-Pin
   baud_rate: 9600
-
-# output:
-#   - platform: ledc
-#     pin: GPIO27
-#     id: vaillant_789
-#     frequency: 30kHz
-#     zero_means_zero: true
-#     min_power: 0.1
-#     max_power: 0.8
